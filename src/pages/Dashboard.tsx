@@ -6,12 +6,10 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, BookOpen, Eye, Download, LogOut, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
-
 interface Profile {
   full_name: string;
   email: string;
 }
-
 interface Ebook {
   id: string;
   title: string;
@@ -23,7 +21,6 @@ interface Ebook {
   cover_image: string;
   created_at: string;
 }
-
 interface Template {
   id: string;
   name: string;
@@ -32,50 +29,54 @@ interface Template {
   category: string;
   suggested_pages: string;
 }
-
 const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [stats, setStats] = useState({ totalViews: 0, totalDownloads: 0, totalEbooks: 0 });
+  const [stats, setStats] = useState({
+    totalViews: 0,
+    totalDownloads: 0,
+    totalEbooks: 0
+  });
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     checkUser();
     fetchData();
   }, []);
-
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
     }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
+    const {
+      data
+    } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     if (data) {
       setProfile(data);
     }
   };
-
   const fetchData = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Fetch ebooks
-    const { data: ebooksData } = await supabase
-      .from("ebooks")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(6);
-
+    const {
+      data: ebooksData
+    } = await supabase.from("ebooks").select("*").eq("user_id", session.user.id).order("created_at", {
+      ascending: false
+    }).limit(6);
     if (ebooksData) {
       setEbooks(ebooksData);
       const totalViews = ebooksData.reduce((sum, book) => sum + book.views, 0);
@@ -83,36 +84,29 @@ const Dashboard = () => {
       setStats({
         totalViews,
         totalDownloads,
-        totalEbooks: ebooksData.length,
+        totalEbooks: ebooksData.length
       });
     }
 
     // Fetch templates
-    const { data: templatesData } = await supabase
-      .from("templates")
-      .select("*")
-      .limit(3);
-
+    const {
+      data: templatesData
+    } = await supabase.from("templates").select("*").limit(3);
     if (templatesData) {
       setTemplates(templatesData);
     }
   };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="PageSmith Hub" className="w-10 h-10" />
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              PageSmith Hub
-            </h1>
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">ScriBook</h1>
           </div>
           <Button onClick={handleLogout} variant="ghost" size="icon">
             <LogOut className="h-5 w-5" />
@@ -132,11 +126,7 @@ const Dashboard = () => {
                 Ready to create something amazing today?
               </p>
             </div>
-            <Button
-              onClick={() => navigate("/create")}
-              size="lg"
-              className="bg-white text-primary hover:bg-white/90 shadow-lg"
-            >
+            <Button onClick={() => navigate("/create")} size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg">
               <Plus className="mr-2 h-5 w-5" />
               Create New Ebook
             </Button>
@@ -185,8 +175,7 @@ const Dashboard = () => {
         {/* Recent Ebooks */}
         <div>
           <h3 className="text-2xl font-bold mb-4">Recent Ebooks</h3>
-          {ebooks.length === 0 ? (
-            <Card className="p-12 text-center">
+          {ebooks.length === 0 ? <Card className="p-12 text-center">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h4 className="text-lg font-semibold mb-2">No ebooks yet</h4>
               <p className="text-muted-foreground mb-4">
@@ -196,11 +185,8 @@ const Dashboard = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Create Ebook
               </Button>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ebooks.map((ebook) => (
-                <Card key={ebook.id} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
+            </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ebooks.map(ebook => <Card key={ebook.id} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
                   <div className="aspect-[3/4] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
                     <BookOpen className="h-12 w-12 text-white" />
                   </div>
@@ -218,10 +204,8 @@ const Dashboard = () => {
                       {ebook.downloads}
                     </span>
                   </div>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
         </div>
 
         {/* Template Suggestions */}
@@ -231,12 +215,7 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold">Template Suggestions</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {templates.map((template) => (
-              <Card
-                key={template.id}
-                className="p-6 hover:shadow-card transition-shadow cursor-pointer"
-                onClick={() => navigate("/create")}
-              >
+            {templates.map(template => <Card key={template.id} className="p-6 hover:shadow-card transition-shadow cursor-pointer" onClick={() => navigate("/create")}>
                 <div className="w-12 h-12 rounded-lg bg-gradient-secondary mb-4" />
                 <h4 className="font-semibold mb-2">{template.name}</h4>
                 <p className="text-sm text-muted-foreground mb-3">
@@ -246,13 +225,10 @@ const Dashboard = () => {
                   <span className="px-2 py-1 bg-accent rounded-full">{template.category}</span>
                   <span>{template.suggested_pages}</span>
                 </div>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
