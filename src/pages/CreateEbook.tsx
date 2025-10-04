@@ -109,21 +109,21 @@ const CreateEbook = () => {
       name: "Standard Ebook",
       description: "Perfect for text-based content with images",
       icon: BookOpen,
-      gradient: "from-purple-500 to-pink-500",
+      gradient: "from-[#fc5934] to-[#ff8568]",
     },
     {
       id: "interactive" as const,
       name: "Interactive Ebook",
       description: "Engage readers with video, audio, and quizzes",
       icon: Video,
-      gradient: "from-cyan-500 to-blue-500",
+      gradient: "from-[#ff8568] to-[#fc5934]",
     },
     {
       id: "professional" as const,
       name: "Professional Ebook",
       description: "Business-focused with marketing features",
       icon: Briefcase,
-      gradient: "from-indigo-500 to-purple-500",
+      gradient: "from-[#191919] to-[#fc5934]",
     },
   ];
 
