@@ -19,7 +19,7 @@ const Index = () => {
             <Button onClick={() => navigate("/auth")} size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6">
               Get Started
             </Button>
-            <Button onClick={() => navigate("/auth")} variant="outline" size="lg" className="border-white px-8 py-6 text-slate-50 text-lg bg-primary-hover:white bg-violet-900 hover:bg-violet-800">
+            <Button onClick={() => navigate("/auth")} variant="outline" size="lg" className="border-white px-8 py-6 text-slate-50 text-lg bg-primary-hover:white bg-[#ff6539]">
               Sign In
             </Button>
           </div>
