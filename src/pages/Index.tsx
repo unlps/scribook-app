@@ -7,9 +7,9 @@ const Index = () => {
   return <div className="min-h-screen bg-gradient-hero">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center space-y-8 text-white">
-          <img src={logo} alt="PageSmith Hub" className="w-24 h-24 mx-auto" />
+          <img src={logo} alt="ScriBook" className="w-24 h-24 mx-auto" />
           
-          <h1 className="text-5xl md:text-6xl font-bold">MNEbooks</h1>
+          <h1 className="text-5xl md:text-6xl font-bold">ScriBook</h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto">
             Create stunning ebooks with ease. Choose from standard, interactive, or professional formats.
