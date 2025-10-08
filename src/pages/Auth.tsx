@@ -110,7 +110,7 @@ const Auth = () => {
           {/* Logo & Title */}
           <div className="text-center space-y-3">
             <img src={logo} alt="PageSmith Hub" className="w-16 h-16 mx-auto" />
-            <h1 className="font-bold bg-gradient-primary bg-clip-text text-transparent text-3xl">ScriBook</h1>
+            
             <p className="text-muted-foreground">
               {isLogin ? "Welcome back! Sign in to continue" : "Create your account to get started"}
             </p>
