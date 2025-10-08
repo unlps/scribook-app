@@ -104,7 +104,7 @@ const Auth = () => {
       });
     }
   };
-  return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+  return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4 bg-white">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-glow p-8 space-y-6">
           {/* Logo & Title */}
