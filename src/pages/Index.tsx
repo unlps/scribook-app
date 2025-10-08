@@ -37,7 +37,7 @@ const Index = () => {
       {/* Content */}
       <div className="flex-1 px-6 pt-8 pb-12 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-center mb-3">
-          Welcome to <span className="text-[#fc5934]">ScriBook</span> 👋
+          Welcome to <span className="text-[#fc5934]">ScriBook</span>
         </h1>
         
         <div className="text-center mb-8 max-w-md h-16 flex items-center justify-center">
