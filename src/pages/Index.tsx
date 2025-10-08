@@ -1,11 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import heroBookshelf from "@/assets/hero-bookshelf.jpg";
+import library1 from "@/assets/library-1.png";
+import library2 from "@/assets/library-2.png";
 import { useState, useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentImage, setCurrentImage] = useState(0);
+  
+  const heroImages = [library1, library2];
   
   const messages = [
     "Create stunning standard, interactive, and professional ebooks with ease",
@@ -21,16 +25,28 @@ const Index = () => {
     }, 3000);
     return () => clearInterval(timer);
   }, [messages.length]);
+
+  useEffect(() => {
+    const imageTimer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(imageTimer);
+  }, [heroImages.length]);
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Hero Image */}
+      {/* Hero Image Slider */}
       <div className="relative w-full h-[45vh] overflow-hidden">
-        <img 
-          src={heroBookshelf} 
-          alt="Beautiful bookshelf" 
-          className="w-full h-full object-cover"
-        />
+        {heroImages.map((image, index) => (
+          <img 
+            key={index}
+            src={image} 
+            alt={`Library scene ${index + 1}`} 
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              index === currentImage ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
       </div>
 
