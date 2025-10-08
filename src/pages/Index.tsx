@@ -1,9 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroBookshelf from "@/assets/hero-bookshelf.jpg";
+import { useState, useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const messages = [
+    "Create stunning standard, interactive, and professional ebooks with ease",
+    "Design beautiful layouts with our intuitive editor",
+    "Add interactive elements to engage your readers",
+    "Export in multiple formats for any device",
+    "Collaborate with your team in real-time"
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % messages.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [messages.length]);
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -23,17 +40,25 @@ const Index = () => {
           Welcome to <span className="text-[#fc5934]">ScriBook</span> 👋
         </h1>
         
-        <p className="text-center text-muted-foreground mb-8 max-w-md">
-          Create stunning standard, interactive, and professional ebooks with ease
-        </p>
+        <div className="text-center mb-8 max-w-md h-16 flex items-center justify-center">
+          <p className="text-muted-foreground transition-opacity duration-500">
+            {messages[currentSlide]}
+          </p>
+        </div>
 
-        {/* Pagination Dots */}
+        {/* Message Slider Dots */}
         <div className="flex gap-2 mb-12">
-          <div className="w-8 h-2 rounded-full bg-[#fc5934]" />
-          <div className="w-2 h-2 rounded-full bg-muted" />
-          <div className="w-2 h-2 rounded-full bg-muted" />
-          <div className="w-2 h-2 rounded-full bg-muted" />
-          <div className="w-2 h-2 rounded-full bg-muted" />
+          {messages.map((_, index) => (
+            <div
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                index === currentSlide 
+                  ? "w-8 bg-[#fc5934]" 
+                  : "w-2 bg-muted hover:bg-muted-foreground/50"
+              }`}
+            />
+          ))}
         </div>
 
         {/* Action Buttons */}
