@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { BookOpen, Chrome } from "lucide-react";
 import logo from "@/assets/logo.png";
+import authBackground from "@/assets/auth-background.png";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -104,7 +105,7 @@ const Auth = () => {
       });
     }
   };
-  return <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4 bg-white">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center" style={{ backgroundImage: `url(${authBackground})` }}>
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-glow p-8 space-y-6">
           {/* Logo & Title */}
