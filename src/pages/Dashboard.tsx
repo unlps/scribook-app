@@ -126,7 +126,7 @@ const Dashboard = () => {
                 Ready to create something amazing today?
               </p>
             </div>
-            <Button onClick={() => navigate("/create")} size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg">
+            <Button onClick={() => navigate("/create")} size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg mx-px my-[4px] px-[5px] py-[13px]">
               <Plus className="mr-2 h-5 w-5" />
               Create New Ebook
             </Button>
