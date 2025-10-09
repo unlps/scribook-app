@@ -120,15 +120,15 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2">
-                Welcome back, {profile?.full_name || "Creator"}! 👋
+                Bem-vindo de volta, {profile?.full_name || "Criador"}! 👋
               </h2>
               <p className="text-white/90 text-lg">
-                Ready to create something amazing today?
+                Pronto para criar algo incrível hoje?
               </p>
             </div>
             <Button onClick={() => navigate("/create")} size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg mx-px my-[4px] px-[5px] py-[13px]">
               <Plus className="mr-2 h-5 w-5" />
-              Create New Ebook
+              Criar Novo Ebook
             </Button>
           </div>
         </div>
@@ -141,7 +141,7 @@ const Dashboard = () => {
                 <BookOpen className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Ebooks</p>
+                <p className="text-sm text-muted-foreground">Total de Ebooks</p>
                 <p className="text-2xl font-bold">{stats.totalEbooks}</p>
               </div>
             </div>
@@ -153,7 +153,7 @@ const Dashboard = () => {
                 <Eye className="h-6 w-6 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Views</p>
+                <p className="text-sm text-muted-foreground">Total de Visualizações</p>
                 <p className="text-2xl font-bold">{stats.totalViews}</p>
               </div>
             </div>
@@ -165,7 +165,7 @@ const Dashboard = () => {
                 <Download className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Downloads</p>
+                <p className="text-sm text-muted-foreground">Total de Downloads</p>
                 <p className="text-2xl font-bold">{stats.totalDownloads}</p>
               </div>
             </div>
@@ -174,16 +174,16 @@ const Dashboard = () => {
 
         {/* Recent Ebooks */}
         <div>
-          <h3 className="text-2xl font-bold mb-4">Recent Ebooks</h3>
+          <h3 className="text-2xl font-bold mb-4">Ebooks Recentes</h3>
           {ebooks.length === 0 ? <Card className="p-12 text-center">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h4 className="text-lg font-semibold mb-2">No ebooks yet</h4>
+              <h4 className="text-lg font-semibold mb-2">Nenhum ebook ainda</h4>
               <p className="text-muted-foreground mb-4">
-                Create your first ebook to get started
+                Crie seu primeiro ebook para começar
               </p>
               <Button onClick={() => navigate("/create")}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Ebook
+                Criar Ebook
               </Button>
             </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {ebooks.map(ebook => <Card key={ebook.id} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
@@ -192,7 +192,7 @@ const Dashboard = () => {
                   </div>
                   <h4 className="font-semibold mb-1">{ebook.title}</h4>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {ebook.description || "No description"}
+                    {ebook.description || "Sem descrição"}
                   </p>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -212,7 +212,7 @@ const Dashboard = () => {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-bold">Template Suggestions</h3>
+            <h3 className="text-2xl font-bold">Sugestões de Templates</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {templates.map(template => <Card key={template.id} className="p-6 hover:shadow-card transition-shadow cursor-pointer" onClick={() => navigate("/create")}>

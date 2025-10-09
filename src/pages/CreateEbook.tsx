@@ -62,8 +62,8 @@ const CreateEbook = () => {
   const handleCreateEbook = async () => {
     if (!title || !selectedType) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
+        title: "Informações faltando",
+        description: "Por favor, preencha todos os campos obrigatórios",
         variant: "destructive",
       });
       return;
@@ -87,14 +87,14 @@ const CreateEbook = () => {
       if (error) throw error;
 
       toast({
-        title: "Ebook created!",
-        description: "Your ebook has been created successfully.",
+        title: "Ebook criado!",
+        description: "Seu ebook foi criado com sucesso.",
       });
 
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erro",
         description: error.message,
         variant: "destructive",
       });
@@ -106,22 +106,22 @@ const CreateEbook = () => {
   const ebookTypes = [
     {
       id: "standard" as const,
-      name: "Standard Ebook",
-      description: "Perfect for text-based content with images",
+      name: "Ebook Padrão",
+      description: "Perfeito para conteúdo baseado em texto com imagens",
       icon: BookOpen,
       gradient: "from-[#fc5934] to-[#ff8568]",
     },
     {
       id: "interactive" as const,
-      name: "Interactive Ebook",
-      description: "Engage readers with video, audio, and quizzes",
+      name: "Ebook Interativo",
+      description: "Envolva leitores com vídeo, áudio e questionários",
       icon: Video,
       gradient: "from-[#ff8568] to-[#fc5934]",
     },
     {
       id: "professional" as const,
-      name: "Professional Ebook",
-      description: "Business-focused with marketing features",
+      name: "Ebook Profissional",
+      description: "Focado em negócios com recursos de marketing",
       icon: Briefcase,
       gradient: "from-[#191919] to-[#fc5934]",
     },
@@ -142,7 +142,7 @@ const CreateEbook = () => {
             </Button>
             <img src={logo} alt="PageSmith Hub" className="w-10 h-10" />
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Create New Ebook
+              Criar Novo Ebook
             </h1>
           </div>
         </div>
@@ -153,9 +153,9 @@ const CreateEbook = () => {
         {step === "type" && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Choose Your Ebook Type</h2>
+              <h2 className="text-3xl font-bold">Escolha o Tipo do Seu Ebook</h2>
               <p className="text-muted-foreground">
-                Select the format that best suits your content
+                Selecione o formato que melhor se adapta ao seu conteúdo
               </p>
             </div>
 
@@ -186,10 +186,10 @@ const CreateEbook = () => {
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center gap-2">
                 <Sparkles className="h-6 w-6 text-primary" />
-                <h2 className="text-3xl font-bold">Choose a Template</h2>
+                <h2 className="text-3xl font-bold">Escolha um Template</h2>
               </div>
               <p className="text-muted-foreground">
-                Pick a template designed for {selectedType} ebooks
+                Escolha um template projetado para ebooks {selectedType}
               </p>
             </div>
 
@@ -221,13 +221,13 @@ const CreateEbook = () => {
 
             <div className="flex justify-center gap-4">
               <Button variant="outline" onClick={() => setStep("type")}>
-                Back
+                Voltar
               </Button>
               <Button
                 onClick={() => setStep("details")}
                 disabled={!selectedTemplate}
               >
-                Continue
+                Continuar
               </Button>
             </div>
           </div>
@@ -238,18 +238,18 @@ const CreateEbook = () => {
           <div className="max-w-2xl mx-auto">
             <Card className="p-8 space-y-6">
               <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold">Ebook Details</h2>
+                <h2 className="text-3xl font-bold">Detalhes do Ebook</h2>
                 <p className="text-muted-foreground">
-                  Add the details for your new ebook
+                  Adicione os detalhes do seu novo ebook
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
+                  <Label htmlFor="title">Título *</Label>
                   <Input
                     id="title"
-                    placeholder="Enter your ebook title"
+                    placeholder="Digite o título do seu ebook"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -257,10 +257,10 @@ const CreateEbook = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe your ebook..."
+                    placeholder="Descreva seu ebook..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
@@ -268,24 +268,24 @@ const CreateEbook = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="pages">Number of Pages</Label>
+                  <Label htmlFor="pages">Número de Páginas</Label>
                   <Input
                     id="pages"
                     type="number"
-                    placeholder={selectedTemplate?.suggested_pages || "e.g., 20"}
+                    placeholder={selectedTemplate?.suggested_pages || "ex: 20"}
                     value={pages}
                     onChange={(e) => setPages(e.target.value)}
                     min="1"
                   />
                   {selectedTemplate && (
                     <p className="text-xs text-muted-foreground">
-                      Suggested: {selectedTemplate.suggested_pages}
+                      Sugerido: {selectedTemplate.suggested_pages}
                     </p>
                   )}
                 </div>
 
                 <div className="bg-muted rounded-lg p-4 space-y-1">
-                  <p className="text-sm font-medium">Selected Template</p>
+                  <p className="text-sm font-medium">Template Selecionado</p>
                   <p className="text-sm text-muted-foreground">
                     {selectedTemplate?.name} - {selectedType}
                   </p>
@@ -298,14 +298,14 @@ const CreateEbook = () => {
                   onClick={() => setStep("template")}
                   className="flex-1"
                 >
-                  Back
+                  Voltar
                 </Button>
                 <Button
                   onClick={handleCreateEbook}
                   disabled={loading || !title}
                   className="flex-1 bg-gradient-primary hover:opacity-90"
                 >
-                  {loading ? "Creating..." : "Create Ebook"}
+                  {loading ? "Criando..." : "Criar Ebook"}
                 </Button>
               </div>
             </Card>

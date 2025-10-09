@@ -54,8 +54,8 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in."
+          title: "Bem-vindo de volta!",
+          description: "Você entrou com sucesso."
         });
       } else {
         const {
@@ -72,13 +72,13 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "Account created!",
-          description: "Welcome to PageSmith Hub."
+          title: "Conta criada!",
+          description: "Bem-vindo ao PageSmith Hub."
         });
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erro",
         description: error.message,
         variant: "destructive"
       });
@@ -99,7 +99,7 @@ const Auth = () => {
       if (error) throw error;
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erro",
         description: error.message,
         variant: "destructive"
       });
@@ -113,14 +113,14 @@ const Auth = () => {
             <img src={logo} alt="PageSmith Hub" className="w-16 h-16 mx-auto" />
             
             <p className="text-muted-foreground">
-              {isLogin ? "Welcome back! Sign in to continue" : "Create your account to get started"}
+              {isLogin ? "Bem-vindo de volta! Entre para continuar" : "Crie sua conta para começar"}
             </p>
           </div>
 
           {/* Google Auth */}
           <Button onClick={handleGoogleAuth} variant="outline" className="w-full" type="button">
             <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
+            Continuar com Google
           </Button>
 
           <div className="relative">
@@ -133,29 +133,29 @@ const Auth = () => {
           {/* Email Auth Form */}
           <form onSubmit={handleEmailAuth} className="space-y-4">
             {!isLogin && <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} required={!isLogin} />
+                <Label htmlFor="fullName">Nome Completo</Label>
+                <Input id="fullName" type="text" placeholder="João Silva" value={fullName} onChange={e => setFullName(e.target.value)} required={!isLogin} />
               </div>}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              <Input id="email" type="email" placeholder="voce@exemplo.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
               <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
             </div>
 
             <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+              {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar Conta"}
             </Button>
           </form>
 
           {/* Toggle Login/Signup */}
           <div className="text-center text-sm">
             <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              {isLogin ? "Não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}
             </button>
           </div>
         </div>
