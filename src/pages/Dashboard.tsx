@@ -116,7 +116,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-hero rounded-2xl p-8 text-white shadow-glow">
+        <div className="bg-gradient-hero rounded-2xl p-8 text-white shadow-glow bg-[#fc5934]">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2">
