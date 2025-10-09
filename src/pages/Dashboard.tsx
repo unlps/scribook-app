@@ -116,11 +116,11 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-hero rounded-2xl p-8 text-white shadow-glow bg-[#fc5934]">
+        <div className="rounded-2xl p-8 text-white shadow-glow bg-[#fc5934]">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2">
-                Bem-vindo de volta, {profile?.full_name || "Criador"}! 👋
+                Bem-vindo de volta, {profile?.full_name || "Criador"}!
               </h2>
               <p className="text-white/90 text-lg">
                 Pronto para criar algo incrível hoje?
