@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, BookOpen, Eye, Download, LogOut, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
+import BottomNav from "@/components/BottomNav";
 interface Profile {
   full_name: string;
   email: string;
@@ -114,7 +115,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 py-8 pb-24 space-y-8">
         {/* Welcome Section */}
         <div className="rounded-2xl p-8 text-white shadow-glow bg-[#fc5934]">
           <div className="flex items-center justify-between">
@@ -229,6 +230,9 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>;
 };
 export default Dashboard;
