@@ -4,9 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles } from "lucide-react";
+import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles, ChevronRight } from "lucide-react";
 import logo from "@/assets/logo.png";
 import BottomNav from "@/components/BottomNav";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 interface Profile {
   full_name: string;
   email: string;
@@ -154,10 +161,16 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Ebooks */}
+        {/* Meus Livros */}
         <div>
-          <h3 className="text-2xl font-bold mb-4">Ebooks Recentes</h3>
-          {ebooks.length === 0 ? <Card className="p-12 text-center">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Meus Livros</h3>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          {ebooks.length === 0 ? (
+            <Card className="p-12 text-center">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h4 className="text-lg font-semibold mb-2">Nenhum ebook ainda</h4>
               <p className="text-muted-foreground mb-4">
@@ -167,48 +180,178 @@ const Dashboard = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Ebook
               </Button>
-            </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ebooks.map(ebook => <Card key={ebook.id} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
-                  <div className="aspect-[3/4] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
-                    <BookOpen className="h-12 w-12 text-white" />
-                  </div>
-                  <h4 className="font-semibold mb-1">{ebook.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {ebook.description || "Sem descrição"}
-                  </p>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      {ebook.views}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Download className="h-4 w-4" />
-                      {ebook.downloads}
-                    </span>
-                  </div>
-                </Card>)}
-            </div>}
+            </Card>
+          ) : (
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {ebooks.map((ebook) => (
+                  <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
+                      <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                      <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                        {ebook.description || "Sem descrição"}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {ebook.views}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Download className="h-3 w-3" />
+                          {ebook.downloads}
+                        </span>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          )}
         </div>
 
-        {/* Template Suggestions */}
+        {/* Explorar por Gênero */}
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h3 className="text-2xl font-bold">Sugestões de Templates</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Explorar por Gênero</h3>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {templates.map(template => <Card key={template.id} className="p-6 hover:shadow-card transition-shadow cursor-pointer" onClick={() => navigate("/create")}>
-                <div className="w-12 h-12 rounded-lg bg-gradient-secondary mb-4" />
-                <h4 className="font-semibold mb-2">{template.name}</h4>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {template.description}
-                </p>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="px-2 py-1 bg-accent rounded-full">{template.category}</span>
-                  <span>{template.suggested_pages}</span>
-                </div>
-              </Card>)}
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {["Romance", "Thriller", "Inspiração", "Ficção Científica", "Mistério"].map((genre) => (
+                <CarouselItem key={genre} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Card className="p-6 hover:shadow-card transition-shadow cursor-pointer bg-gradient-secondary">
+                    <h4 className="font-semibold text-white text-center">{genre}</h4>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </div>
+
+        {/* Recomendado para Ti */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Recomendado para Ti</h3>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {ebooks.slice(0, 4).map((ebook) => (
+                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
+                    <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-white" />
+                    </div>
+                    <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                      {ebook.description || "Sem descrição"}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {ebook.views}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Download className="h-3 w-3" />
+                        {ebook.downloads}
+                      </span>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </div>
+
+        {/* Publicados por Mim */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Publicados por Mim</h3>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {ebooks.slice(0, 3).map((ebook) => (
+                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
+                    <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-white" />
+                    </div>
+                    <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                      {ebook.description || "Sem descrição"}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {ebook.views}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Download className="h-3 w-3" />
+                        {ebook.downloads}
+                      </span>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </div>
+
+        {/* Ebooks Recentes */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Ebooks Recentes</h3>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {ebooks.map((ebook) => (
+                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
+                    <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-white" />
+                    </div>
+                    <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                      {ebook.description || "Sem descrição"}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {ebook.views}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Download className="h-3 w-3" />
+                        {ebook.downloads}
+                      </span>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         </div>
       </main>
 
