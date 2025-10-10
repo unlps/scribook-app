@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, BookOpen, Eye, Download, LogOut, Sparkles } from "lucide-react";
+import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
 import BottomNav from "@/components/BottomNav";
 interface Profile {
@@ -97,10 +97,6 @@ const Dashboard = () => {
       setTemplates(templatesData);
     }
   };
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -109,8 +105,8 @@ const Dashboard = () => {
             <img src={logo} alt="PageSmith Hub" className="w-10 h-10" />
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">ScriBook</h1>
           </div>
-          <Button onClick={handleLogout} variant="ghost" size="icon">
-            <LogOut className="h-5 w-5" />
+          <Button onClick={() => navigate("/conversas")} variant="ghost" size="icon">
+            <MessageSquare className="h-5 w-5" />
           </Button>
         </div>
       </header>
