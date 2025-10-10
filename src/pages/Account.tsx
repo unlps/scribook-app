@@ -19,6 +19,7 @@ import {
   BookOpen
 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import scribookIcon from "@/assets/scribook-icon.jpg";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 
@@ -116,9 +117,7 @@ const Account = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-white" />
-            </div>
+            <img src={scribookIcon} alt="ScriBook" className="w-10 h-10 rounded-lg" />
             <h1 className="text-2xl font-bold">Conta</h1>
           </div>
         </div>
