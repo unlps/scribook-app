@@ -113,22 +113,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8 pb-24 space-y-8">
         {/* Welcome Section */}
-        <div className="rounded-2xl p-8 text-white shadow-glow bg-[#fc5934]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">
-                Bem-vindo de volta, {profile?.full_name || "Criador"}!
-              </h2>
-              <p className="text-white/90 text-lg">
-                Pronto para criar algo incrível hoje?
-              </p>
-            </div>
-            <Button onClick={() => navigate("/create")} size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg mx-px my-[4px] px-[5px] py-[13px]">
-              <Plus className="mr-2 h-5 w-5" />
-              Criar Novo Ebook
-            </Button>
-          </div>
-        </div>
+        
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
