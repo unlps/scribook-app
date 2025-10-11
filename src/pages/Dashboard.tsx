@@ -7,13 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles, ChevronRight } from "lucide-react";
 import logo from "@/assets/logo.png";
 import BottomNav from "@/components/BottomNav";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 interface Profile {
   full_name: string;
   email: string;
@@ -169,8 +163,7 @@ const Dashboard = () => {
               Ver todos <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-          {ebooks.length === 0 ? (
-            <Card className="p-12 text-center">
+          {ebooks.length === 0 ? <Card className="p-12 text-center">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h4 className="text-lg font-semibold mb-2">Nenhum ebook ainda</h4>
               <p className="text-muted-foreground mb-4">
@@ -180,12 +173,9 @@ const Dashboard = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Ebook
               </Button>
-            </Card>
-          ) : (
-            <Carousel className="w-full">
+            </Card> : <Carousel className="w-full">
               <CarouselContent className="-ml-2 md:-ml-4">
-                {ebooks.map((ebook) => (
-                  <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                {ebooks.map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
                     <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
                       <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
                         <BookOpen className="h-12 w-12 text-white" />
@@ -205,13 +195,11 @@ const Dashboard = () => {
                         </span>
                       </div>
                     </Card>
-                  </CarouselItem>
-                ))}
+                  </CarouselItem>)}
               </CarouselContent>
               <CarouselPrevious className="hidden md:flex" />
               <CarouselNext className="hidden md:flex" />
-            </Carousel>
-          )}
+            </Carousel>}
         </div>
 
         {/* Explorar por Gênero */}
@@ -224,13 +212,11 @@ const Dashboard = () => {
           </div>
           <Carousel className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
-              {["Romance", "Thriller", "Inspiração", "Ficção Científica", "Mistério"].map((genre) => (
-                <CarouselItem key={genre} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+              {["Romance", "Thriller", "Inspiração", "Ficção Científica", "Mistério"].map(genre => <CarouselItem key={genre} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
                   <Card className="p-6 hover:shadow-card transition-shadow cursor-pointer bg-gradient-secondary">
                     <h4 className="font-semibold text-white text-center">{genre}</h4>
                   </Card>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="hidden md:flex" />
             <CarouselNext className="hidden md:flex" />
@@ -238,43 +224,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recomendado para Ti */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Recomendado para Ti</h3>
-            <Button variant="ghost" size="sm" className="text-primary">
-              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {ebooks.slice(0, 4).map((ebook) => (
-                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
-                    <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
-                      <BookOpen className="h-12 w-12 text-white" />
-                    </div>
-                    <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                      {ebook.description || "Sem descrição"}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {ebook.views}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Download className="h-3 w-3" />
-                        {ebook.downloads}
-                      </span>
-                    </div>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
-        </div>
+        
 
         {/* Publicados por Mim */}
         <div>
@@ -286,8 +236,7 @@ const Dashboard = () => {
           </div>
           <Carousel className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
-              {ebooks.slice(0, 3).map((ebook) => (
-                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+              {ebooks.slice(0, 3).map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
                   <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
                     <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
                       <BookOpen className="h-12 w-12 text-white" />
@@ -307,8 +256,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                   </Card>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="hidden md:flex" />
             <CarouselNext className="hidden md:flex" />
@@ -325,8 +273,7 @@ const Dashboard = () => {
           </div>
           <Carousel className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
-              {ebooks.map((ebook) => (
-                <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+              {ebooks.map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
                   <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
                     <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
                       <BookOpen className="h-12 w-12 text-white" />
@@ -346,8 +293,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                   </Card>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="hidden md:flex" />
             <CarouselNext className="hidden md:flex" />
