@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Video, Briefcase, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Video, Briefcase, Sparkles, Type, Image, Minus } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { EBOOK_TEMPLATES } from "@/components/templates/ebooks";
 
 interface Template {
   id: string;
@@ -49,6 +50,21 @@ const CreateEbook = () => {
   };
 
   const fetchTemplates = async () => {
+    // For standard ebooks, use hardcoded templates
+    if (selectedType === "standard") {
+      const standardTemplates = EBOOK_TEMPLATES.map(t => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        type: "standard",
+        category: "Layout",
+        suggested_pages: "15-30 páginas"
+      }));
+      setTemplates(standardTemplates);
+      return;
+    }
+
+    // For other types, fetch from database
     const { data } = await supabase
       .from("templates")
       .select("*")
@@ -194,29 +210,79 @@ const CreateEbook = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <Card
-                  key={template.id}
-                  className={`p-6 cursor-pointer hover:shadow-card transition-all border-2 ${
-                    selectedTemplate?.id === template.id ? "border-primary" : ""
-                  }`}
-                  onClick={() => setSelectedTemplate(template)}
-                >
-                  <div className="aspect-[3/4] bg-gradient-primary rounded-lg mb-4 flex items-center justify-center">
-                    <BookOpen className="h-12 w-12 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2">{template.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {template.description}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="px-2 py-1 bg-accent rounded-full">
-                      {template.category}
-                    </span>
-                    <span>{template.suggested_pages}</span>
-                  </div>
-                </Card>
-              ))}
+              {templates.map((template) => {
+                const templateIcon = template.id === "classic" ? Type : 
+                                    template.id === "visual" ? Image : 
+                                    template.id === "minimal" ? Minus : BookOpen;
+                const TemplateIcon = templateIcon;
+
+                return (
+                  <Card
+                    key={template.id}
+                    className={`p-6 cursor-pointer hover:shadow-card transition-all border-2 ${
+                      selectedTemplate?.id === template.id ? "border-primary" : ""
+                    }`}
+                    onClick={() => setSelectedTemplate(template)}
+                  >
+                    {selectedType === "standard" ? (
+                      <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 rounded-lg mb-4 flex items-center justify-center border-2 border-border relative overflow-hidden">
+                        {template.id === "classic" && (
+                          <div className="absolute inset-0 p-4 flex flex-col gap-2">
+                            <div className="h-3 bg-foreground/80 w-3/4 rounded mx-auto"></div>
+                            <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                            <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                            <div className="h-1 bg-foreground/20 w-4/5 rounded"></div>
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className="w-16 h-16 bg-primary/20 rounded"></div>
+                            </div>
+                            <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                            <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                          </div>
+                        )}
+                        {template.id === "visual" && (
+                          <div className="absolute inset-0 flex flex-col">
+                            <div className="h-1/3 bg-primary/30"></div>
+                            <div className="flex-1 p-4 space-y-2">
+                              <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                              <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="aspect-square bg-primary/20 rounded"></div>
+                                <div className="aspect-square bg-primary/20 rounded"></div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {template.id === "minimal" && (
+                          <div className="absolute inset-0 p-4 flex gap-2">
+                            <div className="flex-1 space-y-2">
+                              <div className="h-2 bg-foreground/80 w-2/3 rounded"></div>
+                              <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                              <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                              <div className="h-1 bg-foreground/20 w-4/5 rounded"></div>
+                              <div className="h-1 bg-foreground/20 w-full rounded"></div>
+                            </div>
+                            <div className="w-1/3 bg-primary/20 rounded"></div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="aspect-[3/4] bg-gradient-primary rounded-lg mb-4 flex items-center justify-center">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                    )}
+                    <h3 className="font-semibold mb-2">{template.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {template.description}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="px-2 py-1 bg-accent rounded-full">
+                        {template.category}
+                      </span>
+                      <span>{template.suggested_pages}</span>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="flex justify-center gap-4">
