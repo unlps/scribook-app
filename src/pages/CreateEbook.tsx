@@ -7,40 +7,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Video, Briefcase, Sparkles, Type, Image, Minus } from "lucide-react";
+import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { EBOOK_TEMPLATES } from "@/components/templates/ebooks";
 
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  category: string;
-  suggested_pages: string;
-}
+type WizardStep = "origin" | "metadata" | "template" | "complete";
+type OriginType = "blank" | "import";
 
 const CreateEbook = () => {
-  const [step, setStep] = useState<"type" | "template" | "details">("type");
-  const [selectedType, setSelectedType] = useState<"standard" | "interactive" | "professional" | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [step, setStep] = useState<WizardStep>("origin");
+  const [origin, setOrigin] = useState<OriginType | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
-  const [pages, setPages] = useState("");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     checkUser();
+    loadUserProfile();
   }, []);
-
-  useEffect(() => {
-    if (selectedType) {
-      fetchTemplates();
-    }
-  }, [selectedType]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -49,37 +39,26 @@ const CreateEbook = () => {
     }
   };
 
-  const fetchTemplates = async () => {
-    // For standard ebooks, use hardcoded templates
-    if (selectedType === "standard") {
-      const standardTemplates = EBOOK_TEMPLATES.map(t => ({
-        id: t.id,
-        name: t.name,
-        description: t.description,
-        type: "standard",
-        category: "Layout",
-        suggested_pages: "15-30 páginas"
-      }));
-      setTemplates(standardTemplates);
-      return;
-    }
-
-    // For other types, fetch from database
-    const { data } = await supabase
-      .from("templates")
-      .select("*")
-      .eq("type", selectedType);
-
-    if (data) {
-      setTemplates(data);
+  const loadUserProfile = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", session.user.id)
+        .single();
+      
+      if (profile?.full_name) {
+        setAuthor(profile.full_name);
+      }
     }
   };
 
   const handleCreateEbook = async () => {
-    if (!title || !selectedType) {
+    if (!title || !selectedTemplate) {
       toast({
         title: "Informações faltando",
-        description: "Por favor, preencha todos os campos obrigatórios",
+        description: "Por favor, preencha o título e escolha um template",
         variant: "destructive",
       });
       return;
@@ -91,22 +70,42 @@ const CreateEbook = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { error } = await supabase.from("ebooks").insert({
+      // Upload cover image if provided
+      let coverImageUrl = null;
+      if (coverImage) {
+        const fileExt = coverImage.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${session.user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('ebook-covers')
+          .upload(filePath, coverImage);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('ebook-covers')
+            .getPublicUrl(filePath);
+          coverImageUrl = publicUrl;
+        }
+      }
+
+      const { data: ebook, error } = await supabase.from("ebooks").insert({
         user_id: session.user.id,
         title,
         description,
-        type: selectedType,
-        template_id: selectedTemplate?.id,
-        pages: pages ? parseInt(pages) : 0,
-      });
+        type: "standard",
+        template_id: selectedTemplate,
+        cover_image: coverImageUrl,
+      }).select().single();
 
       if (error) throw error;
 
       toast({
         title: "Ebook criado!",
-        description: "Seu ebook foi criado com sucesso.",
+        description: "Redirecionando para o editor...",
       });
 
+      // Redirect to editor (will be created later)
       navigate("/dashboard");
     } catch (error: any) {
       toast({
@@ -119,27 +118,40 @@ const CreateEbook = () => {
     }
   };
 
-  const ebookTypes = [
+  const handleNext = () => {
+    if (step === "origin" && origin) {
+      setStep("metadata");
+    } else if (step === "metadata" && title) {
+      setStep("template");
+    } else if (step === "template" && selectedTemplate) {
+      handleCreateEbook();
+    }
+  };
+
+  const handleBack = () => {
+    if (step === "metadata") {
+      setStep("origin");
+    } else if (step === "template") {
+      setStep("metadata");
+    }
+  };
+
+  const originOptions = [
     {
-      id: "standard" as const,
-      name: "Ebook Padrão",
-      description: "Perfeito para conteúdo baseado em texto com imagens",
+      id: "blank" as const,
+      name: "Criar do Zero",
+      description: "Comece com um eBook em branco e crie seu conteúdo",
       icon: BookOpen,
       gradient: "from-[#fc5934] to-[#ff8568]",
+      recommended: true,
     },
     {
-      id: "interactive" as const,
-      name: "Ebook Interativo",
-      description: "Envolva leitores com vídeo, áudio e questionários",
-      icon: Video,
+      id: "import" as const,
+      name: "Importar EPUB/PDF",
+      description: "Faça upload de um arquivo existente para converter",
+      icon: Upload,
       gradient: "from-[#ff8568] to-[#fc5934]",
-    },
-    {
-      id: "professional" as const,
-      name: "Ebook Profissional",
-      description: "Focado em negócios com recursos de marketing",
-      icon: Briefcase,
-      gradient: "from-[#191919] to-[#fc5934]",
+      recommended: false,
     },
   ];
 
@@ -152,47 +164,181 @@ const CreateEbook = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => step === "type" ? navigate("/dashboard") : setStep("type")}
+              onClick={() => step === "origin" ? navigate("/dashboard") : handleBack()}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={logo} alt="PageSmith Hub" className="w-10 h-10" />
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Criar Novo Ebook
-            </h1>
+            <img src={logo} alt="Scribook" className="w-10 h-10" />
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Criar Novo Ebook
+              </h1>
+              <div className="flex gap-2 mt-1">
+                <span className={`text-xs ${step === "origin" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                  1. Origem
+                </span>
+                <span className="text-xs text-muted-foreground">→</span>
+                <span className={`text-xs ${step === "metadata" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                  2. Metadados
+                </span>
+                <span className="text-xs text-muted-foreground">→</span>
+                <span className={`text-xs ${step === "template" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                  3. Template
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Step: Select Type */}
-        {step === "type" && (
+        {/* Step: Select Origin */}
+        {step === "origin" && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Escolha o Tipo do Seu Ebook</h2>
+              <h2 className="text-3xl font-bold">Como deseja criar seu eBook?</h2>
               <p className="text-muted-foreground">
-                Selecione o formato que melhor se adapta ao seu conteúdo
+                Escolha entre começar do zero ou importar um arquivo existente
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {ebookTypes.map((type) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {originOptions.map((option) => (
                 <Card
-                  key={type.id}
-                  className="p-6 cursor-pointer hover:shadow-glow transition-all border-2 hover:border-primary"
-                  onClick={() => {
-                    setSelectedType(type.id);
-                    setStep("template");
-                  }}
+                  key={option.id}
+                  className={`p-6 cursor-pointer hover:shadow-glow transition-all border-2 ${
+                    origin === option.id ? "border-primary" : "hover:border-primary"
+                  }`}
+                  onClick={() => setOrigin(option.id)}
                 >
-                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${type.gradient} flex items-center justify-center mb-4`}>
-                    <type.icon className="h-8 w-8 text-white" />
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${option.gradient} flex items-center justify-center`}>
+                      <option.icon className="h-8 w-8 text-white" />
+                    </div>
+                    {option.recommended && (
+                      <span className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded-full">
+                        Recomendado
+                      </span>
+                    )}
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{type.name}</h3>
-                  <p className="text-sm text-muted-foreground">{type.description}</p>
+                  <h3 className="text-xl font-semibold mb-2">{option.name}</h3>
+                  <p className="text-sm text-muted-foreground">{option.description}</p>
                 </Card>
               ))}
             </div>
+
+            {origin === "import" && (
+              <Card className="p-6 max-w-2xl mx-auto">
+                <Label htmlFor="file-upload" className="block mb-2">
+                  Fazer upload de EPUB ou PDF
+                </Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  accept=".epub,.pdf"
+                  onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                  className="cursor-pointer"
+                />
+                {uploadedFile && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Arquivo selecionado: {uploadedFile.name}
+                  </p>
+                )}
+              </Card>
+            )}
+
+            <div className="flex justify-center">
+              <Button
+                onClick={handleNext}
+                disabled={!origin || (origin === "import" && !uploadedFile)}
+                size="lg"
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Metadata */}
+        {step === "metadata" && (
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold">Informações do eBook</h2>
+                <p className="text-muted-foreground">
+                  Preencha os dados básicos do seu eBook
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">
+                    Título <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="Digite o título do seu eBook"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="author">Autor</Label>
+                  <Input
+                    id="author"
+                    placeholder="Nome do autor"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva seu eBook..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cover">Capa (opcional)</Label>
+                  <Input
+                    id="cover"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCoverImage(e.target.files?.[0] || null)}
+                    className="cursor-pointer"
+                  />
+                  {coverImage && (
+                    <p className="text-sm text-muted-foreground">
+                      Imagem selecionada: {coverImage.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  className="flex-1"
+                >
+                  Voltar
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={!title}
+                  className="flex-1 bg-gradient-primary hover:opacity-90"
+                >
+                  Continuar
+                </Button>
+              </div>
+            </Card>
           </div>
         )}
 
@@ -205,12 +351,12 @@ const CreateEbook = () => {
                 <h2 className="text-3xl font-bold">Escolha um Template</h2>
               </div>
               <p className="text-muted-foreground">
-                Escolha um template projetado para ebooks {selectedType}
+                Selecione o layout visual para o seu eBook
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {templates.map((template) => {
+              {EBOOK_TEMPLATES.map((template) => {
                 const templateIcon = template.id === "classic" ? Type : 
                                     template.id === "visual" ? Image : 
                                     template.id === "minimal" ? Minus : BookOpen;
@@ -220,11 +366,11 @@ const CreateEbook = () => {
                   <Card
                     key={template.id}
                     className={`p-6 cursor-pointer hover:shadow-card transition-all border-2 ${
-                      selectedTemplate?.id === template.id ? "border-primary" : ""
+                      selectedTemplate === template.id ? "border-primary" : ""
                     }`}
-                    onClick={() => setSelectedTemplate(template)}
+                    onClick={() => setSelectedTemplate(template.id)}
                   >
-                    {selectedType === "standard" ? (
+                    {true && (
                       <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 rounded-lg mb-4 flex items-center justify-center border-2 border-border relative overflow-hidden">
                         {template.id === "classic" && (
                           <div className="absolute inset-0 p-4 flex flex-col gap-2">
@@ -265,116 +411,28 @@ const CreateEbook = () => {
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div className="aspect-[3/4] bg-gradient-primary rounded-lg mb-4 flex items-center justify-center">
-                        <BookOpen className="h-12 w-12 text-white" />
-                      </div>
                     )}
                     <h3 className="font-semibold mb-2">{template.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="text-sm text-muted-foreground">
                       {template.description}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="px-2 py-1 bg-accent rounded-full">
-                        {template.category}
-                      </span>
-                      <span>{template.suggested_pages}</span>
-                    </div>
                   </Card>
                 );
               })}
             </div>
 
             <div className="flex justify-center gap-4">
-              <Button variant="outline" onClick={() => setStep("type")}>
+              <Button variant="outline" onClick={handleBack}>
                 Voltar
               </Button>
               <Button
-                onClick={() => setStep("details")}
-                disabled={!selectedTemplate}
+                onClick={handleNext}
+                disabled={!selectedTemplate || loading}
+                className="bg-gradient-primary hover:opacity-90"
               >
-                Continuar
+                {loading ? "Criando..." : "Criar eBook"}
               </Button>
             </div>
-          </div>
-        )}
-
-        {/* Step: Enter Details */}
-        {step === "details" && (
-          <div className="max-w-2xl mx-auto">
-            <Card className="p-8 space-y-6">
-              <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold">Detalhes do Ebook</h2>
-                <p className="text-muted-foreground">
-                  Adicione os detalhes do seu novo ebook
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título *</Label>
-                  <Input
-                    id="title"
-                    placeholder="Digite o título do seu ebook"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Descreva seu ebook..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pages">Número de Páginas</Label>
-                  <Input
-                    id="pages"
-                    type="number"
-                    placeholder={selectedTemplate?.suggested_pages || "ex: 20"}
-                    value={pages}
-                    onChange={(e) => setPages(e.target.value)}
-                    min="1"
-                  />
-                  {selectedTemplate && (
-                    <p className="text-xs text-muted-foreground">
-                      Sugerido: {selectedTemplate.suggested_pages}
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-muted rounded-lg p-4 space-y-1">
-                  <p className="text-sm font-medium">Template Selecionado</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedTemplate?.name} - {selectedType}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep("template")}
-                  className="flex-1"
-                >
-                  Voltar
-                </Button>
-                <Button
-                  onClick={handleCreateEbook}
-                  disabled={loading || !title}
-                  className="flex-1 bg-gradient-primary hover:opacity-90"
-                >
-                  {loading ? "Criando..." : "Criar Ebook"}
-                </Button>
-              </div>
-            </Card>
           </div>
         )}
       </main>
