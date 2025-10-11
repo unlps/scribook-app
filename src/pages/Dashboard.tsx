@@ -227,41 +227,7 @@ const Dashboard = () => {
         
 
         {/* Publicados por Mim */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Publicados por Mim</h3>
-            <Button variant="ghost" size="sm" className="text-primary">
-              Ver todos <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {ebooks.slice(0, 3).map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
-                    <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
-                      <BookOpen className="h-12 w-12 text-white" />
-                    </div>
-                    <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                      {ebook.description || "Sem descrição"}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {ebook.views}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Download className="h-3 w-3" />
-                        {ebook.downloads}
-                      </span>
-                    </div>
-                  </Card>
-                </CarouselItem>)}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
-        </div>
+        
 
         {/* Ebooks Recentes */}
         <div>
