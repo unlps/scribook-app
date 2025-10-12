@@ -1,1 +1,4 @@
 project_id = "tshpbhaxukrxzhtjbrpu"
+
+[functions.parse-ebook]
+verify_jwt = true

@@ -6,13 +6,21 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText } from "lucide-react";
+import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText, ArrowRight, Check, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { EBOOK_TEMPLATES } from "@/components/templates/ebooks";
 
-type WizardStep = "origin" | "metadata" | "template" | "complete";
+type WizardStep = "origin" | "upload" | "mapping" | "metadata" | "template" | "complete";
 type OriginType = "blank" | "import";
+
+interface ParsedChapter {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
 
 const CreateEbook = () => {
   const [step, setStep] = useState<WizardStep>("origin");
@@ -24,6 +32,9 @@ const CreateEbook = () => {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsedChapters, setParsedChapters] = useState<ParsedChapter[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -118,8 +129,72 @@ const CreateEbook = () => {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    setUploadedFile(file);
+    setIsUploading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Upload file to storage
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('ebook-uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Parse the file using edge function
+      setIsParsing(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const { data, error } = await supabase.functions.invoke('parse-ebook', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      setParsedChapters(data.chapters || []);
+      setStep('mapping');
+      toast({
+        title: "Sucesso!",
+        description: "Arquivo processado com sucesso",
+      });
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao processar arquivo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setIsParsing(false);
+    }
+  };
+
+  const handleChapterUpdate = (chapterId: string, field: 'title' | 'content', value: string) => {
+    setParsedChapters(chapters =>
+      chapters.map(ch =>
+        ch.id === chapterId ? { ...ch, [field]: value } : ch
+      )
+    );
+  };
+
+  const handleRemoveChapter = (chapterId: string) => {
+    setParsedChapters(chapters => chapters.filter(ch => ch.id !== chapterId));
+  };
+
   const handleNext = () => {
     if (step === "origin" && origin) {
+      if (origin === "import") {
+        setStep("upload");
+      } else {
+        setStep("metadata");
+      }
+    } else if (step === "mapping" && parsedChapters.length > 0) {
       setStep("metadata");
     } else if (step === "metadata" && title) {
       setStep("template");
@@ -129,8 +204,16 @@ const CreateEbook = () => {
   };
 
   const handleBack = () => {
-    if (step === "metadata") {
+    if (step === "upload") {
       setStep("origin");
+    } else if (step === "mapping") {
+      setStep("upload");
+    } else if (step === "metadata") {
+      if (origin === "import") {
+        setStep("mapping");
+      } else {
+        setStep("origin");
+      }
     } else if (step === "template") {
       setStep("metadata");
     }
@@ -173,17 +256,29 @@ const CreateEbook = () => {
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Criar Novo Ebook
               </h1>
-              <div className="flex gap-2 mt-1">
+              <div className="flex gap-2 mt-1 flex-wrap">
                 <span className={`text-xs ${step === "origin" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                   1. Origem
                 </span>
+                {origin === "import" && (
+                  <>
+                    <span className="text-xs text-muted-foreground">→</span>
+                    <span className={`text-xs ${step === "upload" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                      2. Upload
+                    </span>
+                    <span className="text-xs text-muted-foreground">→</span>
+                    <span className={`text-xs ${step === "mapping" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                      3. Mapeamento
+                    </span>
+                  </>
+                )}
                 <span className="text-xs text-muted-foreground">→</span>
                 <span className={`text-xs ${step === "metadata" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
-                  2. Metadados
+                  {origin === "import" ? "4" : "2"}. Metadados
                 </span>
                 <span className="text-xs text-muted-foreground">→</span>
                 <span className={`text-xs ${step === "template" ? "text-primary font-semibold" : "text-muted-foreground"}`}>
-                  3. Template
+                  {origin === "import" ? "5" : "3"}. Template
                 </span>
               </div>
             </div>
@@ -192,6 +287,132 @@ const CreateEbook = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Step: Upload File */}
+        {step === "upload" && (
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold">Upload do Arquivo</h2>
+                <p className="text-muted-foreground">
+                  Faça upload do seu EPUB ou PDF
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary/50 transition-colors">
+                  <input
+                    type="file"
+                    accept=".epub,.pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file);
+                    }}
+                    className="hidden"
+                    id="file-upload-main"
+                    disabled={isUploading || isParsing}
+                  />
+                  <label
+                    htmlFor="file-upload-main"
+                    className="cursor-pointer flex flex-col items-center gap-4"
+                  >
+                    <Upload className="w-12 h-12 text-muted-foreground" />
+                    <div>
+                      <p className="text-lg font-medium">
+                        {isUploading ? 'Fazendo upload...' : isParsing ? 'Processando arquivo...' : 'Clique para fazer upload'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Formatos aceitos: EPUB, PDF
+                      </p>
+                    </div>
+                  </label>
+                </div>
+                {uploadedFile && (
+                  <p className="text-sm text-center text-muted-foreground">
+                    Arquivo selecionado: {uploadedFile.name}
+                  </p>
+                )}
+              </div>
+
+              <Button variant="outline" onClick={handleBack} className="w-full">
+                Voltar
+              </Button>
+            </Card>
+          </div>
+        )}
+
+        {/* Step: Chapter Mapping */}
+        {step === "mapping" && (
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold">Mapeamento de Capítulos</h2>
+                <p className="text-muted-foreground">
+                  Revise e edite os capítulos detectados
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between mb-4 p-4 bg-muted rounded-lg">
+                <p className="text-sm font-medium">
+                  {parsedChapters.length} capítulo{parsedChapters.length !== 1 ? 's' : ''} detectado{parsedChapters.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                {parsedChapters.map((chapter, index) => (
+                  <Card key={chapter.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <Label htmlFor={`chapter-title-${chapter.id}`}>
+                            Capítulo {index + 1}
+                          </Label>
+                          <Input
+                            id={`chapter-title-${chapter.id}`}
+                            value={chapter.title}
+                            onChange={(e) => handleChapterUpdate(chapter.id, 'title', e.target.value)}
+                            placeholder="Título do capítulo"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveChapter(chapter.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div>
+                        <Label htmlFor={`chapter-content-${chapter.id}`}>
+                          Conteúdo (preview)
+                        </Label>
+                        <Textarea
+                          id={`chapter-content-${chapter.id}`}
+                          value={chapter.content.substring(0, 200) + (chapter.content.length > 200 ? '...' : '')}
+                          readOnly
+                          className="h-20 resize-none bg-muted"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  Voltar
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={parsedChapters.length === 0}
+                  className="flex-1 bg-gradient-primary hover:opacity-90"
+                >
+                  Continuar <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Step: Select Origin */}
         {step === "origin" && (
           <div className="max-w-4xl mx-auto space-y-6">
@@ -227,30 +448,10 @@ const CreateEbook = () => {
               ))}
             </div>
 
-            {origin === "import" && (
-              <Card className="p-6 max-w-2xl mx-auto">
-                <Label htmlFor="file-upload" className="block mb-2">
-                  Fazer upload de EPUB ou PDF
-                </Label>
-                <Input
-                  id="file-upload"
-                  type="file"
-                  accept=".epub,.pdf"
-                  onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
-                  className="cursor-pointer"
-                />
-                {uploadedFile && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Arquivo selecionado: {uploadedFile.name}
-                  </p>
-                )}
-              </Card>
-            )}
-
             <div className="flex justify-center">
               <Button
                 onClick={handleNext}
-                disabled={!origin || (origin === "import" && !uploadedFile)}
+                disabled={!origin}
                 size="lg"
               >
                 Continuar
