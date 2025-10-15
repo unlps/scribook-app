@@ -1,3 +1,5 @@
+import { sanitizeHtml } from '@/lib/utils';
+
 interface EbookTemplateProps {
   title: string;
   content: string;
@@ -21,7 +23,7 @@ export const MinimalTemplate = ({ title, content, images }: EbookTemplateProps) 
           <div className="lg:col-span-3">
             <div 
               className="prose prose-lg dark:prose-invert max-w-none font-sans text-foreground/90 space-y-6"
-              dangerouslySetInnerHTML={{ __html: content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
             />
           </div>
 

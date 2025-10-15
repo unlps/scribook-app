@@ -1,3 +1,5 @@
+import { sanitizeHtml } from '@/lib/utils';
+
 interface EbookTemplateProps {
   title: string;
   content: string;
@@ -19,7 +21,7 @@ export const ClassicTemplate = ({ title, content, images }: EbookTemplateProps) 
         {/* Content */}
         <div 
           className="prose prose-lg dark:prose-invert max-w-none font-serif text-foreground/90 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
         />
 
         {/* Images */}

@@ -12,6 +12,7 @@ import BottomNav from "@/components/BottomNav";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
+import { sanitizeHtml } from "@/lib/utils";
 interface Profile {
   full_name: string;
   email: string;
@@ -353,11 +354,11 @@ const Dashboard = () => {
                         </div>
                         <h4 
                           className="font-semibold mb-1 text-sm line-clamp-1"
-                          dangerouslySetInnerHTML={{ __html: ebook.title }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook.title) }}
                         />
                         <p 
                           className="text-xs text-muted-foreground mb-2 line-clamp-1"
-                          dangerouslySetInnerHTML={{ __html: ebook.description || "Sem descrição" }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook.description || "Sem descrição") }}
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
@@ -459,11 +460,11 @@ const Dashboard = () => {
             <div className="space-y-3">
               <h2 
                 className="text-lg font-semibold leading-none tracking-tight"
-                dangerouslySetInnerHTML={{ __html: selectedEbook?.title || "" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedEbook?.title || "") }}
               />
               <p 
                 className="text-sm text-muted-foreground line-clamp-3"
-                dangerouslySetInnerHTML={{ __html: selectedEbook?.description || "Sem descrição" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedEbook?.description || "Sem descrição") }}
               />
             </div>
 

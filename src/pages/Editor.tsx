@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
 import jsPDF from "jspdf";
+import { sanitizeHtml } from "@/lib/utils";
 interface Chapter {
   id?: string;
   title: string;
@@ -499,7 +500,7 @@ export default function Editor() {
                   {/* Title Page */}
                   <div className="text-center space-y-6 pb-12 border-b">
                     <div className="text-4xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: ebook.title
+                    __html: sanitizeHtml(ebook.title)
                   }} />
                     {ebook.author && <p className="text-xl text-gray-700 dark:text-gray-300">
                         Escrito por {ebook.author}
@@ -509,17 +510,17 @@ export default function Editor() {
                   {/* Description Page */}
                   {ebook.description && <div className="pb-12 border-b">
                       <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: ebook.description
+                    __html: sanitizeHtml(ebook.description)
                   }} />
                     </div>}
 
                   {/* Chapters */}
                   {chapters.map((chapter, index) => <div key={index} className="space-y-6">
                       <div className="text-3xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: chapter.title
+                    __html: sanitizeHtml(chapter.title)
                   }} />
                       <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{
-                    __html: chapter.content
+                    __html: sanitizeHtml(chapter.content)
                   }} />
                       {index < chapters.length - 1 && <div className="border-t my-8"></div>}
                     </div>)}

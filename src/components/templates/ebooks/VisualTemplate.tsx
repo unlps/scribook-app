@@ -1,3 +1,5 @@
+import { sanitizeHtml } from '@/lib/utils';
+
 interface EbookTemplateProps {
   title: string;
   content: string;
@@ -36,7 +38,7 @@ export const VisualTemplate = ({ title, content, images }: EbookTemplateProps) =
       <article className="max-w-6xl mx-auto px-6 md:px-12 pb-16 space-y-16">
         <div 
           className="prose prose-xl dark:prose-invert max-w-none text-foreground/90 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
         />
 
         {/* Image Grid (skip first image if used as cover) */}
