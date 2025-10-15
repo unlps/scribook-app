@@ -281,8 +281,12 @@ const Dashboard = () => {
                       className="p-3 hover:shadow-card transition-shadow cursor-pointer"
                       onClick={() => setSelectedEbook(ebook)}
                     >
-                      <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
-                        <BookOpen className="h-12 w-12 text-white" />
+                      <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                        {ebook.cover_image ? (
+                          <img src={ebook.cover_image} alt={ebook.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <BookOpen className="h-12 w-12 text-white" />
+                        )}
                       </div>
                       <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
                       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
