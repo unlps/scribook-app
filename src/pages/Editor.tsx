@@ -272,10 +272,12 @@ export default function Editor() {
       if (ebook.author) {
         pdf.setFontSize(14);
         pdf.text(`Escrito por ${ebook.author}`, 20, yPosition);
-        yPosition += 20;
       }
 
+      // Description page
       if (ebook.description) {
+        pdf.addPage();
+        yPosition = 80;
         pdf.setFontSize(12);
         const descLines = pdf.splitTextToSize(ebook.description, 170);
         pdf.text(descLines, 20, yPosition);
@@ -603,12 +605,16 @@ export default function Editor() {
                         Escrito por {ebook.author}
                       </p>
                     )}
-                    {ebook.description && (
-                      <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                  </div>
+
+                  {/* Description Page */}
+                  {ebook.description && (
+                    <div className="pb-12 border-b">
+                      <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
                         {ebook.description}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Chapters */}
                   {chapters.map((chapter, index) => (

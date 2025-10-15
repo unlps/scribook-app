@@ -168,10 +168,12 @@ const Dashboard = () => {
       if (selectedEbook.author) {
         pdf.setFontSize(14);
         pdf.text(`Escrito por ${selectedEbook.author}`, 20, yPosition);
-        yPosition += 20;
       }
 
+      // Description page
       if (selectedEbook.description) {
+        pdf.addPage();
+        yPosition = 80;
         pdf.setFontSize(12);
         const descLines = pdf.splitTextToSize(selectedEbook.description, 170);
         pdf.text(descLines, 20, yPosition);
