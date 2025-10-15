@@ -47,7 +47,7 @@ export default function Editor() {
 
   const [ebook, setEbook] = useState<Ebook | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [selectedChapterId, setSelectedChapterId] = useState<number>(0);
+  const [selectedChapterId, setSelectedChapterId] = useState<number>(-1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
@@ -397,129 +397,141 @@ export default function Editor() {
 
           <TabsContent value="edit" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Sidebar - Chapter List */}
+              {/* Sidebar - Navigation */}
               <Card className="lg:col-span-1 h-fit">
                 <CardHeader>
-                  <CardTitle className="text-lg">Capítulos</CardTitle>
+                  <CardTitle className="text-lg">Navegação</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {chapters.map((chapter, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedChapterId === index
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      }`}
-                      onClick={() => setSelectedChapterId(index)}
-                    >
-                      <span className="text-sm truncate flex-1 pr-2">
-                        {chapter.title}
-                      </span>
-                      {chapters.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteChapter(index);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={handleAddChapter}
+                    variant={selectedChapterId === -1 ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => setSelectedChapterId(-1)}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Capítulo
+                    Informações do Ebook
                   </Button>
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-medium mb-2 text-muted-foreground">Capítulos</h3>
+                    {chapters.map((chapter, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedChapterId === index
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setSelectedChapterId(index)}
+                      >
+                        <span className="text-sm truncate flex-1 pr-2">
+                          {chapter.title}
+                        </span>
+                        {chapters.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteChapter(index);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-4"
+                      onClick={handleAddChapter}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Novo Capítulo
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
               {/* Main Editor */}
               <div className="lg:col-span-3 space-y-6">
-                {/* Ebook Info */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Informações do Ebook</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Título</label>
-                      <Input
-                        value={ebook.title}
-                        onChange={(e) =>
-                          setEbook({ ...ebook, title: e.target.value })
-                        }
-                        placeholder="Título do ebook"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Descrição</label>
-                      <Textarea
-                        value={ebook.description || ""}
-                        onChange={(e) =>
-                          setEbook({ ...ebook, description: e.target.value })
-                        }
-                        placeholder="Descrição do ebook"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Autor</label>
-                      <Input
-                        value={ebook.author || ""}
-                        onChange={(e) =>
-                          setEbook({ ...ebook, author: e.target.value })
-                        }
-                        placeholder="Nome do autor"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
-                      {coverImagePreview ? (
-                        <div className="relative">
-                          <img
-                            src={coverImagePreview}
-                            alt="Capa"
-                            className="w-full max-w-xs h-auto rounded-lg border"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2"
-                            onClick={handleRemoveCoverImage}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleCoverImageChange}
-                            className="hidden"
-                            id="cover-upload"
-                          />
-                          <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                              Clique para fazer upload da capa
-                            </p>
-                          </label>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Ebook Info Section */}
+                {selectedChapterId === -1 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informações do Ebook</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Título</label>
+                        <Input
+                          value={ebook.title}
+                          onChange={(e) =>
+                            setEbook({ ...ebook, title: e.target.value })
+                          }
+                          placeholder="Título do ebook"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Descrição</label>
+                        <Textarea
+                          value={ebook.description || ""}
+                          onChange={(e) =>
+                            setEbook({ ...ebook, description: e.target.value })
+                          }
+                          placeholder="Descrição do ebook"
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Autor</label>
+                        <Input
+                          value={ebook.author || ""}
+                          onChange={(e) =>
+                            setEbook({ ...ebook, author: e.target.value })
+                          }
+                          placeholder="Nome do autor"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
+                        {coverImagePreview ? (
+                          <div className="relative">
+                            <img
+                              src={coverImagePreview}
+                              alt="Capa"
+                              className="w-full max-w-xs h-auto rounded-lg border"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={handleRemoveCoverImage}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleCoverImageChange}
+                              className="hidden"
+                              id="cover-upload"
+                            />
+                            <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                              <Upload className="h-8 w-8 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Clique para fazer upload da capa
+                              </p>
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Chapter Editor */}
                 {selectedChapter && (
