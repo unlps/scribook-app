@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 interface Chapter {
   id?: string;
   title: string;
@@ -209,12 +210,38 @@ export default function Editor() {
   const handleDownloadPDF = async () => {
     if (!ebook) return;
     try {
-      // Helper function to convert HTML to plain text
+      // Helper function to convert HTML to plain text for titles
       const htmlToText = (html: string) => {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
       };
+
+      // Helper function to render HTML content to canvas
+      const renderHTMLToCanvas = async (html: string, width: number) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.width = `${width}px`;
+        tempDiv.style.padding = '20px';
+        tempDiv.style.backgroundColor = 'white';
+        tempDiv.style.color = 'black';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        tempDiv.style.fontSize = '12px';
+        tempDiv.style.lineHeight = '1.6';
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.innerHTML = html;
+        document.body.appendChild(tempDiv);
+
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        document.body.removeChild(tempDiv);
+        return canvas;
+      };
+
       const pdf = new jsPDF();
       let yPosition = 20;
 
@@ -248,36 +275,78 @@ export default function Editor() {
         pdf.text(`Escrito por ${ebook.author}`, 20, yPosition);
       }
 
-      // Description page
+      // Description page with formatting
       if (ebook.description) {
         pdf.addPage();
-        yPosition = 80;
-        pdf.setFontSize(12);
-        const descText = htmlToText(ebook.description);
-        const descLines = pdf.splitTextToSize(descText, 170);
-        pdf.text(descLines, 20, yPosition);
+        const descCanvas = await renderHTMLToCanvas(ebook.description, 700);
+        const descImgData = descCanvas.toDataURL('image/png');
+        const descWidth = 170;
+        const descHeight = (descCanvas.height * descWidth) / descCanvas.width;
+        pdf.addImage(descImgData, 'PNG', 20, 20, descWidth, descHeight);
       }
 
-      // Chapters
-      chapters.forEach((chapter, index) => {
+      // Chapters with formatting
+      for (const chapter of chapters) {
         pdf.addPage();
         yPosition = 20;
+        
+        // Chapter title
         pdf.setFontSize(18);
         const chapterTitle = htmlToText(chapter.title);
         pdf.text(chapterTitle, 20, yPosition);
         yPosition += 15;
-        pdf.setFontSize(12);
-        const plainText = htmlToText(chapter.content);
-        const contentLines = pdf.splitTextToSize(plainText, 170);
-        contentLines.forEach((line: string) => {
-          if (yPosition > 280) {
-            pdf.addPage();
-            yPosition = 20;
+
+        // Chapter content with formatting
+        const contentCanvas = await renderHTMLToCanvas(chapter.content, 700);
+        const contentImgData = contentCanvas.toDataURL('image/png');
+        const contentWidth = 170;
+        const contentHeight = (contentCanvas.height * contentWidth) / contentCanvas.width;
+        
+        // Check if content fits on current page
+        if (yPosition + contentHeight > 280) {
+          // Split content across multiple pages if needed
+          const pageHeight = 260; // Available height per page
+          let currentY = yPosition;
+          let sourceY = 0;
+          
+          while (sourceY < contentCanvas.height) {
+            const remainingHeight = 280 - currentY;
+            const sliceHeight = Math.min(
+              (remainingHeight / contentWidth) * contentCanvas.width,
+              contentCanvas.height - sourceY
+            );
+            
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = contentCanvas.width;
+            sliceCanvas.height = sliceHeight;
+            const ctx = sliceCanvas.getContext('2d');
+            
+            if (ctx) {
+              ctx.drawImage(
+                contentCanvas,
+                0, sourceY,
+                contentCanvas.width, sliceHeight,
+                0, 0,
+                contentCanvas.width, sliceHeight
+              );
+              
+              const sliceImgData = sliceCanvas.toDataURL('image/png');
+              const sliceDisplayHeight = (sliceHeight * contentWidth) / contentCanvas.width;
+              pdf.addImage(sliceImgData, 'PNG', 20, currentY, contentWidth, sliceDisplayHeight);
+            }
+            
+            sourceY += sliceHeight;
+            
+            if (sourceY < contentCanvas.height) {
+              pdf.addPage();
+              currentY = 20;
+            }
           }
-          pdf.text(line, 20, yPosition);
-          yPosition += 7;
-        });
-      });
+        } else {
+          pdf.addImage(contentImgData, 'PNG', 20, yPosition, contentWidth, contentHeight);
+        }
+      }
+
       pdf.save(`${htmlToText(ebook.title)}.pdf`);
       toast({
         title: "PDF gerado!",
