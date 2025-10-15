@@ -424,7 +424,7 @@ export default function Editor() {
                               <X className="h-4 w-4" />
                             </Button>
                           </div> : <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                            <input type="file" accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={handleCoverImageChange} className="hidden" id="cover-upload" />
+                            <input type="file" accept="image/*" onChange={handleCoverImageChange} className="hidden" id="cover-upload" />
                             <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center gap-2">
                               <Upload className="h-8 w-8 text-muted-foreground" />
                               <p className="text-sm text-muted-foreground">
