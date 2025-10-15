@@ -131,13 +131,11 @@ const CreateEbook = () => {
 
       toast({
         title: "Ebook criado!",
-        description: origin === "import" 
-          ? `Ebook criado com ${parsedChapters.length} capítulos`
-          : "Redirecionando para o editor...",
+        description: "Redirecionando para o editor...",
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      // Redirect to editor
+      navigate(`/editor?id=${ebook.id}`);
     } catch (error: any) {
       toast({
         title: "Erro",

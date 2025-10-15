@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateEbook from "./pages/CreateEbook";
+import Editor from "./pages/Editor";
 import Discover from "./pages/Discover";
 import Notifications from "./pages/Notifications";
 import Account from "./pages/Account";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create" element={<CreateEbook />} />
+          <Route path="/editor" element={<Editor />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/account" element={<Account />} />
