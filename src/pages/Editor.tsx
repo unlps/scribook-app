@@ -27,9 +27,7 @@ export default function Editor() {
   const [searchParams] = useSearchParams();
   const ebookId = searchParams.get("id");
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [ebook, setEbook] = useState<Ebook | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapterId, setSelectedChapterId] = useState<number>(-1);
@@ -48,42 +46,44 @@ export default function Editor() {
   const loadEbook = async () => {
     try {
       const {
-        data: {
-          session
-        }
+        data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
       }
-      const {
-        data: ebookData,
-        error: ebookError
-      } = await supabase.from("ebooks").select("*").eq("id", ebookId).single();
+      const { data: ebookData, error: ebookError } = await supabase
+        .from("ebooks")
+        .select("*")
+        .eq("id", ebookId)
+        .single();
       if (ebookError) throw ebookError;
       setEbook(ebookData);
       setCoverImagePreview(ebookData.cover_image);
-      const {
-        data: chaptersData,
-        error: chaptersError
-      } = await supabase.from("chapters").select("*").eq("ebook_id", ebookId).order("chapter_order", {
-        ascending: true
-      });
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("chapters")
+        .select("*")
+        .eq("ebook_id", ebookId)
+        .order("chapter_order", {
+          ascending: true,
+        });
       if (chaptersError) throw chaptersError;
       if (chaptersData && chaptersData.length > 0) {
         setChapters(chaptersData);
       } else {
-        setChapters([{
-          title: "Capítulo 1",
-          content: "",
-          chapter_order: 0
-        }]);
+        setChapters([
+          {
+            title: "Capítulo 1",
+            content: "",
+            chapter_order: 0,
+          },
+        ]);
       }
     } catch (error: any) {
       toast({
         title: "Erro ao carregar ebook",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
       navigate("/dashboard");
     } finally {
@@ -95,64 +95,55 @@ export default function Editor() {
     setSaving(true);
     try {
       const {
-        data: {
-          session
-        }
+        data: { session },
       } = await supabase.auth.getSession();
       if (!session) return;
 
       // Upload cover image if new one is selected
       let coverImageUrl = ebook.cover_image;
       if (coverImage) {
-        const fileExt = coverImage.name.split('.').pop();
+        const fileExt = coverImage.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${session.user.id}/${fileName}`;
-        const {
-          error: uploadError
-        } = await supabase.storage.from('ebook-covers').upload(filePath, coverImage);
+        const { error: uploadError } = await supabase.storage.from("ebook-covers").upload(filePath, coverImage);
         if (!uploadError) {
           const {
-            data: {
-              publicUrl
-            }
-          } = supabase.storage.from('ebook-covers').getPublicUrl(filePath);
+            data: { publicUrl },
+          } = supabase.storage.from("ebook-covers").getPublicUrl(filePath);
           coverImageUrl = publicUrl;
         }
       }
-      const {
-        error: ebookError
-      } = await supabase.from("ebooks").update({
-        title: ebook.title,
-        description: ebook.description,
-        pages: chapters.length,
-        cover_image: coverImageUrl,
-        author: ebook.author
-      }).eq("id", ebook.id);
+      const { error: ebookError } = await supabase
+        .from("ebooks")
+        .update({
+          title: ebook.title,
+          description: ebook.description,
+          pages: chapters.length,
+          cover_image: coverImageUrl,
+          author: ebook.author,
+        })
+        .eq("id", ebook.id);
       if (ebookError) throw ebookError;
-      const {
-        error: deleteError
-      } = await supabase.from("chapters").delete().eq("ebook_id", ebook.id);
+      const { error: deleteError } = await supabase.from("chapters").delete().eq("ebook_id", ebook.id);
       if (deleteError) throw deleteError;
       const chaptersToInsert = chapters.map((chapter, index) => ({
         ebook_id: ebook.id,
         title: chapter.title,
         content: chapter.content,
-        chapter_order: index
+        chapter_order: index,
       }));
-      const {
-        error: chaptersError
-      } = await supabase.from("chapters").insert(chaptersToInsert);
+      const { error: chaptersError } = await supabase.from("chapters").insert(chaptersToInsert);
       if (chaptersError) throw chaptersError;
       toast({
         title: "Salvo com sucesso!",
-        description: "Todas as alterações foram salvas."
+        description: "Todas as alterações foram salvas.",
       });
       await loadEbook();
     } catch (error: any) {
       toast({
         title: "Erro ao salvar",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -162,7 +153,7 @@ export default function Editor() {
     const newChapter: Chapter = {
       title: `Capítulo ${chapters.length + 1}`,
       content: "",
-      chapter_order: chapters.length
+      chapter_order: chapters.length,
     };
     setChapters([...chapters, newChapter]);
     setSelectedChapterId(chapters.length);
@@ -172,7 +163,7 @@ export default function Editor() {
       toast({
         title: "Ação não permitida",
         description: "O ebook precisa ter pelo menos um capítulo.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -203,148 +194,153 @@ export default function Editor() {
     setCoverImagePreview(null);
     setEbook({
       ...ebook,
-      cover_image: null
+      cover_image: null,
     });
   };
   const handleDownloadPDF = async () => {
     if (!ebook) return;
-    
+
     const loadingToast = toast({
       title: "Gerando PDF...",
       description: "Por favor, aguarde.",
-      duration: 30000
+      duration: 30000,
     });
 
     try {
-      // Helper function to convert HTML to plain text for filename
       const htmlToText = (html: string) => {
-        const temp = document.createElement('div');
+        const temp = document.createElement("div");
         temp.innerHTML = html;
-        return temp.textContent || temp.innerText || '';
+        return (temp.textContent || temp.innerText || "ebook").trim();
       };
 
-      // Create a container for the PDF content
-      const container = document.createElement('div');
-      container.style.width = '210mm';
-      container.style.padding = '20mm';
-      container.style.backgroundColor = 'white';
-      container.style.color = 'black';
-      container.style.fontFamily = 'Arial, sans-serif';
-      container.style.position = 'fixed';
-      container.style.left = '0';
-      container.style.top = '0';
-      container.style.zIndex = '-1';
-      container.style.opacity = '0';
-      container.style.pointerEvents = 'none';
+      // 1) Contêiner fora da viewport (não invisível)
+      const container = document.createElement("div");
+      container.style.width = "794px"; // ~210mm @ 96dpi
+      container.style.padding = "80px 64px";
+      container.style.backgroundColor = "#ffffff";
+      container.style.color = "#000000";
+      container.style.fontFamily = "Arial, sans-serif";
+      container.style.position = "absolute";
+      container.style.left = "-10000px"; // fora da tela
+      container.style.top = "0";
+      container.style.pointerEvents = "none";
 
-      // Add cover image if exists
+      // 2) Capa (com CORS)
       if (coverImagePreview) {
-        const coverDiv = document.createElement('div');
-        coverDiv.style.textAlign = 'center';
-        coverDiv.style.marginBottom = '40px';
-        coverDiv.innerHTML = `<img src="${coverImagePreview}" style="max-width: 100%; height: auto; border-radius: 8px;" crossorigin="anonymous" />`;
+        const coverDiv = document.createElement("div");
+        coverDiv.style.textAlign = "center";
+        coverDiv.style.marginBottom = "40px";
+
+        // cria img via DOM (melhor p/ setar crossOrigin)
+        const img = document.createElement("img");
+        img.src = coverImagePreview;
+        img.crossOrigin = "anonymous";
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.style.borderRadius = "8px";
+        coverDiv.appendChild(img);
         container.appendChild(coverDiv);
       }
 
-      // Add title page
-      const titleDiv = document.createElement('div');
-      titleDiv.style.marginTop = '60px';
-      titleDiv.style.marginBottom = '40px';
+      // 3) Título / autor
+      const titleDiv = document.createElement("div");
+      titleDiv.style.marginTop = "20px";
+      titleDiv.style.marginBottom = "32px";
       titleDiv.innerHTML = `
-        <h1 style="font-size: 32px; margin-bottom: 20px; font-weight: bold;">${ebook.title}</h1>
-        ${ebook.author ? `<p style="font-size: 18px; color: #666;">Escrito por ${ebook.author}</p>` : ''}
-      `;
+      <h1 style="font-size: 32px; margin-bottom: 12px; font-weight: bold;">
+        ${ebook.title || ""}
+      </h1>
+      ${ebook.author ? `<p style="font-size: 18px; color: #444;">Escrito por ${ebook.author}</p>` : ""}
+    `;
       container.appendChild(titleDiv);
 
-      // Add description
+      // 4) Descrição
       if (ebook.description) {
-        const descDiv = document.createElement('div');
-        descDiv.style.marginBottom = '40px';
-        descDiv.style.fontSize = '14px';
-        descDiv.style.lineHeight = '1.6';
+        const descDiv = document.createElement("div");
+        descDiv.style.marginBottom = "40px";
+        descDiv.style.fontSize = "14px";
+        descDiv.style.lineHeight = "1.7";
         descDiv.innerHTML = ebook.description;
         container.appendChild(descDiv);
       }
 
-      // Add chapters
+      // 5) Capítulos
       chapters.forEach((chapter, index) => {
-        const chapterDiv = document.createElement('div');
-        chapterDiv.style.pageBreakBefore = index > 0 ? 'always' : 'auto';
-        chapterDiv.style.marginBottom = '30px';
-        
-        const chapterTitle = document.createElement('h2');
-        chapterTitle.style.fontSize = '24px';
-        chapterTitle.style.marginBottom = '20px';
-        chapterTitle.style.fontWeight = 'bold';
-        chapterTitle.innerHTML = chapter.title;
-        chapterDiv.appendChild(chapterTitle);
-        
-        const chapterContent = document.createElement('div');
-        chapterContent.style.fontSize = '14px';
-        chapterContent.style.lineHeight = '1.8';
-        chapterContent.innerHTML = chapter.content;
-        chapterDiv.appendChild(chapterContent);
-        
-        container.appendChild(chapterDiv);
+        const wrap = document.createElement("div");
+        wrap.style.marginBottom = "32px";
+        if (index > 0) wrap.style.pageBreakBefore = "always";
+
+        const h2 = document.createElement("h2");
+        h2.style.fontSize = "22px";
+        h2.style.marginBottom = "12px";
+        h2.style.fontWeight = "bold";
+        h2.innerHTML = chapter.title || `Capítulo ${index + 1}`;
+        wrap.appendChild(h2);
+
+        const body = document.createElement("div");
+        body.style.fontSize = "14px";
+        body.style.lineHeight = "1.8";
+        body.innerHTML = chapter.content || "";
+        wrap.appendChild(body);
+
+        container.appendChild(wrap);
       });
 
       document.body.appendChild(container);
 
-      // Wait a bit for rendering
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 6) Espera fontes e imagens carregarem
+      try {
+        await (document as any).fonts?.ready;
+      } catch {}
+      const imgs = Array.from(container.querySelectorAll("img"));
+      await Promise.all(imgs.map((i) => (i as HTMLImageElement).decode().catch(() => Promise.resolve())));
 
-      // Generate PDF with html2pdf
+      // 7) Gera o PDF
       const opt = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
-        filename: `${htmlToText(ebook.title) || 'ebook'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.95 },
-        html2canvas: { 
-          scale: 2, 
+        filename: `${htmlToText(ebook.title) || "ebook"}.pdf`,
+        image: { type: "jpeg" as const, quality: 0.95 },
+        html2canvas: {
+          scale: 2,
           useCORS: true,
+          backgroundColor: "#ffffff",
           logging: false,
-          letterRendering: true
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait' as const 
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        pagebreak: { mode: ["css", "legacy"] },
       };
 
       await html2pdf().set(opt).from(container).save();
-      
-      // Clean up
+
       setTimeout(() => {
-        if (document.body.contains(container)) {
-          document.body.removeChild(container);
-        }
+        if (document.body.contains(container)) document.body.removeChild(container);
       }, 100);
 
       loadingToast.dismiss();
-      toast({
-        title: "PDF gerado!",
-        description: "O download foi iniciado."
-      });
+      toast({ title: "PDF gerado!", description: "O download foi iniciado." });
     } catch (error: any) {
       toast({
         title: "Erro ao gerar PDF",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background">
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando editor...</p>
         </div>
-      </div>;
+      </div>
+    );
   }
   if (!ebook) return null;
   const selectedChapter = chapters[selectedChapterId];
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
@@ -354,7 +350,6 @@ export default function Editor() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                
                 <p className="text-sm text-muted-foreground">Editor de Ebook</p>
               </div>
             </div>
@@ -363,7 +358,11 @@ export default function Editor() {
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? "Salvando..." : "Salvar"}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setActiveTab(activeTab === "edit" ? "preview" : "edit")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab(activeTab === "edit" ? "preview" : "edit")}
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 {activeTab === "edit" ? "Visualizar" : "Editar"}
               </Button>
@@ -398,28 +397,43 @@ export default function Editor() {
                   <CardTitle className="text-lg">Navegação</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant={selectedChapterId === -1 ? "default" : "outline"} className="w-full justify-start" onClick={() => setSelectedChapterId(-1)}>
+                  <Button
+                    variant={selectedChapterId === -1 ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => setSelectedChapterId(-1)}
+                  >
                     Informações do Ebook
                   </Button>
                   <div className="pt-4 border-t">
                     <h3 className="text-sm font-medium mb-2 text-muted-foreground">Capítulos</h3>
                     {chapters.map((chapter, index) => {
-                    // Convert HTML to plain text for display
-                    const temp = document.createElement('div');
-                    temp.innerHTML = chapter.title;
-                    const plainTitle = temp.textContent || temp.innerText || `Capítulo ${index + 1}`;
-                    return <div key={index} className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${selectedChapterId === index ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`} onClick={() => setSelectedChapterId(index)}>
-                          <span className="text-sm truncate flex-1 pr-2">
-                            {plainTitle}
-                          </span>
-                          {chapters.length > 1 && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={e => {
-                        e.stopPropagation();
-                        handleDeleteChapter(index);
-                      }}>
+                      // Convert HTML to plain text for display
+                      const temp = document.createElement("div");
+                      temp.innerHTML = chapter.title;
+                      const plainTitle = temp.textContent || temp.innerText || `Capítulo ${index + 1}`;
+                      return (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${selectedChapterId === index ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                          onClick={() => setSelectedChapterId(index)}
+                        >
+                          <span className="text-sm truncate flex-1 pr-2">{plainTitle}</span>
+                          {chapters.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChapter(index);
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
-                            </Button>}
-                        </div>;
-                  })}
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
                     <Button variant="outline" size="sm" className="w-full mt-4" onClick={handleAddChapter}>
                       <Plus className="h-4 w-4 mr-2" />
                       Novo Capítulo
@@ -431,72 +445,119 @@ export default function Editor() {
               {/* Main Editor */}
               <div className="lg:col-span-3 space-y-6">
                 {/* Ebook Info Section */}
-                {selectedChapterId === -1 && <Card>
+                {selectedChapterId === -1 && (
+                  <Card>
                     <CardHeader>
                       <CardTitle>Informações do Ebook</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <RichTextEditor content={ebook.title} onChange={content => setEbook({
-                      ...ebook,
-                      title: content
-                    })} placeholder="Título do ebook" className="min-h-[100px]" />
+                        <RichTextEditor
+                          content={ebook.title}
+                          onChange={(content) =>
+                            setEbook({
+                              ...ebook,
+                              title: content,
+                            })
+                          }
+                          placeholder="Título do ebook"
+                          className="min-h-[100px]"
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <RichTextEditor content={ebook.description || ""} onChange={content => setEbook({
-                      ...ebook,
-                      description: content
-                    })} placeholder="Descrição do ebook" className="min-h-[200px]" />
+                        <RichTextEditor
+                          content={ebook.description || ""}
+                          onChange={(content) =>
+                            setEbook({
+                              ...ebook,
+                              description: content,
+                            })
+                          }
+                          placeholder="Descrição do ebook"
+                          className="min-h-[200px]"
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Autor</label>
-                        <Input value={ebook.author || ""} onChange={e => setEbook({
-                      ...ebook,
-                      author: e.target.value
-                    })} placeholder="Nome do autor" />
+                        <Input
+                          value={ebook.author || ""}
+                          onChange={(e) =>
+                            setEbook({
+                              ...ebook,
+                              author: e.target.value,
+                            })
+                          }
+                          placeholder="Nome do autor"
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
-                        {coverImagePreview ? <div className="relative">
-                            <img src={coverImagePreview} alt="Capa" className="w-full max-w-xs h-auto rounded-lg border" />
-                            <Button variant="destructive" size="icon" className="absolute top-2 right-2" onClick={handleRemoveCoverImage}>
+                        {coverImagePreview ? (
+                          <div className="relative">
+                            <img
+                              src={coverImagePreview}
+                              alt="Capa"
+                              className="w-full max-w-xs h-auto rounded-lg border"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={handleRemoveCoverImage}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
-                          </div> : <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                            <input type="file" accept="image/*" onChange={handleCoverImageChange} className="hidden" id="cover-upload" />
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleCoverImageChange}
+                              className="hidden"
+                              id="cover-upload"
+                            />
                             <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center gap-2">
                               <Upload className="h-8 w-8 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">
-                                Clique para fazer upload da capa
-                              </p>
+                              <p className="text-sm text-muted-foreground">Clique para fazer upload da capa</p>
                             </label>
-                          </div>}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
-                  </Card>}
+                  </Card>
+                )}
 
                 {/* Chapter Editor */}
-                {selectedChapter && <Card>
+                {selectedChapter && (
+                  <Card>
                     <CardHeader>
                       <CardTitle>Editar Capítulo</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Título do Capítulo
-                        </label>
-                        <RichTextEditor content={selectedChapter.title} onChange={content => updateChapter(selectedChapterId, "title", content)} placeholder="Título do capítulo" className="min-h-[100px]" />
+                        <label className="text-sm font-medium mb-2 block">Título do Capítulo</label>
+                        <RichTextEditor
+                          content={selectedChapter.title}
+                          onChange={(content) => updateChapter(selectedChapterId, "title", content)}
+                          placeholder="Título do capítulo"
+                          className="min-h-[100px]"
+                        />
                       </div>
                       <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Conteúdo
-                        </label>
-                        <RichTextEditor content={selectedChapter.content} onChange={content => updateChapter(selectedChapterId, "content", content)} placeholder="Escreva o conteúdo do capítulo..." className="min-h-[400px]" />
+                        <label className="text-sm font-medium mb-2 block">Conteúdo</label>
+                        <RichTextEditor
+                          content={selectedChapter.content}
+                          onChange={(content) => updateChapter(selectedChapterId, "content", content)}
+                          placeholder="Escreva o conteúdo do capítulo..."
+                          className="min-h-[400px]"
+                        />
                       </div>
                     </CardContent>
-                  </Card>}
+                  </Card>
+                )}
               </div>
             </div>
           </TabsContent>
@@ -509,44 +570,67 @@ export default function Editor() {
               <CardContent>
                 <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg">
                   {/* Cover */}
-                  {coverImagePreview && <div className="text-center pb-12 border-b">
+                  {coverImagePreview && (
+                    <div className="text-center pb-12 border-b">
                       <div className="flex justify-center">
-                        <img src={coverImagePreview} alt={ebook.title} className="w-full max-w-md h-auto rounded-lg shadow-lg" />
+                        <img
+                          src={coverImagePreview}
+                          alt={ebook.title}
+                          className="w-full max-w-md h-auto rounded-lg shadow-lg"
+                        />
                       </div>
-                    </div>}
+                    </div>
+                  )}
 
                   {/* Title Page */}
                   <div className="text-center space-y-6 pb-12 border-b">
-                    <div className="text-4xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: ebook.title
-                  }} />
-                    {ebook.author && <p className="text-xl text-gray-700 dark:text-gray-300">
-                        Escrito por {ebook.author}
-                      </p>}
+                    <div
+                      className="text-4xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: ebook.title,
+                      }}
+                    />
+                    {ebook.author && (
+                      <p className="text-xl text-gray-700 dark:text-gray-300">Escrito por {ebook.author}</p>
+                    )}
                   </div>
 
                   {/* Description Page */}
-                  {ebook.description && <div className="pb-12 border-b">
-                      <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: ebook.description
-                  }} />
-                    </div>}
+                  {ebook.description && (
+                    <div className="pb-12 border-b">
+                      <div
+                        className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: ebook.description,
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Chapters */}
-                  {chapters.map((chapter, index) => <div key={index} className="space-y-6">
-                      <div className="text-3xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
-                    __html: chapter.title
-                  }} />
-                      <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{
-                    __html: chapter.content
-                  }} />
+                  {chapters.map((chapter, index) => (
+                    <div key={index} className="space-y-6">
+                      <div
+                        className="text-3xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: chapter.title,
+                        }}
+                      />
+                      <div
+                        className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: chapter.content,
+                        }}
+                      />
                       {index < chapters.length - 1 && <div className="border-t my-8"></div>}
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 }
