@@ -420,34 +420,41 @@ export default function Editor() {
                   </Button>
                   <div className="pt-4 border-t">
                     <h3 className="text-sm font-medium mb-2 text-muted-foreground">Capítulos</h3>
-                    {chapters.map((chapter, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                          selectedChapterId === index
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => setSelectedChapterId(index)}
-                      >
-                        <span className="text-sm truncate flex-1 pr-2">
-                          {chapter.title}
-                        </span>
-                        {chapters.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteChapter(index);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                    {chapters.map((chapter, index) => {
+                      // Convert HTML to plain text for display
+                      const temp = document.createElement('div');
+                      temp.innerHTML = chapter.title;
+                      const plainTitle = temp.textContent || temp.innerText || `Capítulo ${index + 1}`;
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                            selectedChapterId === index
+                              ? "bg-primary text-primary-foreground"
+                              : "hover:bg-muted"
+                          }`}
+                          onClick={() => setSelectedChapterId(index)}
+                        >
+                          <span className="text-sm truncate flex-1 pr-2">
+                            {plainTitle}
+                          </span>
+                          {chapters.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChapter(index);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
                     <Button
                       variant="outline"
                       size="sm"
