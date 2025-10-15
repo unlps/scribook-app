@@ -234,14 +234,31 @@ export default function Editor() {
     setEbook({ ...ebook, cover_image: null });
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!ebook) return;
 
     try {
       const pdf = new jsPDF();
       let yPosition = 20;
 
-      // Cover page
+      // Cover page with image
+      if (coverImagePreview) {
+        try {
+          const img = new Image();
+          img.src = coverImagePreview;
+          await new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+          });
+          const imgWidth = 80;
+          const imgHeight = (img.height / img.width) * imgWidth;
+          const x = (210 - imgWidth) / 2; // Center horizontally
+          pdf.addImage(img, 'JPEG', x, yPosition, imgWidth, imgHeight);
+          yPosition += imgHeight + 20;
+        } catch (error) {
+          console.error('Erro ao adicionar capa ao PDF:', error);
+        }
+      }
+
       pdf.setFontSize(24);
       pdf.text(ebook.title, 20, yPosition);
       yPosition += 20;
@@ -251,6 +268,8 @@ export default function Editor() {
         const descLines = pdf.splitTextToSize(ebook.description, 170);
         pdf.text(descLines, 20, yPosition);
       }
+
+      pdf.addPage();
 
       // Chapters
       chapters.forEach((chapter, index) => {
@@ -531,6 +550,15 @@ export default function Editor() {
                 <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg">
                   {/* Cover */}
                   <div className="text-center space-y-4 pb-12 border-b">
+                    {coverImagePreview && (
+                      <div className="flex justify-center mb-6">
+                        <img 
+                          src={coverImagePreview} 
+                          alt={ebook.title}
+                          className="w-64 h-auto rounded-lg shadow-lg"
+                        />
+                      </div>
+                    )}
                     <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
                       {ebook.title}
                     </h1>

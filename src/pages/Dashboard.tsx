@@ -138,6 +138,24 @@ const Dashboard = () => {
       const pdf = new jsPDF();
       let yPosition = 20;
 
+      // Cover image
+      if (selectedEbook.cover_image) {
+        try {
+          const img = new Image();
+          img.src = selectedEbook.cover_image;
+          await new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+          });
+          const imgWidth = 80;
+          const imgHeight = (img.height / img.width) * imgWidth;
+          const x = (210 - imgWidth) / 2; // Center horizontally
+          pdf.addImage(img, 'JPEG', x, yPosition, imgWidth, imgHeight);
+          yPosition += imgHeight + 20;
+        } catch (error) {
+          console.error('Erro ao adicionar capa ao PDF:', error);
+        }
+      }
+
       // Title
       pdf.setFontSize(20);
       pdf.text(selectedEbook.title, 20, yPosition);
@@ -149,6 +167,8 @@ const Dashboard = () => {
         pdf.text(selectedEbook.description, 20, yPosition);
         yPosition += 10;
       }
+
+      pdf.addPage();
 
       // Chapters
       chapters?.forEach((chapter) => {
@@ -355,6 +375,15 @@ const Dashboard = () => {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {selectedEbook?.cover_image && (
+              <div className="flex justify-center">
+                <img 
+                  src={selectedEbook.cover_image} 
+                  alt={selectedEbook.title}
+                  className="w-48 h-auto rounded-lg border shadow-sm"
+                />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Tipo</p>
