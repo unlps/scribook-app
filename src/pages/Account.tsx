@@ -20,6 +20,7 @@ import {
   BookOpen
 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import logoDark from "@/assets/logo-dark.png";
 import scribookIcon from "@/assets/scribook-icon.jpg";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";

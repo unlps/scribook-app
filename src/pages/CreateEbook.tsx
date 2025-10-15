@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText, ArrowRight, Check, X } from "lucide-react";
 import logo from "@/assets/logo.png";
+import logoDark from "@/assets/logo-dark.png";
 import { EBOOK_TEMPLATES } from "@/components/templates/ebooks";
 type WizardStep = "origin" | "upload" | "mapping" | "metadata" | "template" | "complete";
 type OriginType = "blank" | "import";
@@ -36,6 +38,7 @@ const CreateEbook = () => {
   const {
     toast
   } = useToast();
+  const { theme } = useTheme();
   useEffect(() => {
     checkUser();
     loadUserProfile();
@@ -256,7 +259,7 @@ const CreateEbook = () => {
             <Button variant="ghost" size="icon" onClick={() => step === "origin" ? navigate("/dashboard") : handleBack()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={logo} alt="Scribook" className="w-10 h-10" />
+            <img src={theme === "dark" ? logoDark : logo} alt="Scribook" className="w-10 h-10" />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Criar Novo Ebook

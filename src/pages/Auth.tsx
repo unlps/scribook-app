@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { BookOpen, Chrome } from "lucide-react";
 import logo from "@/assets/logo.png";
+import logoDark from "@/assets/logo-dark.png";
 import authBackground from "@/assets/auth-background.png";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,6 +21,7 @@ const Auth = () => {
   const {
     toast
   } = useToast();
+  const { theme } = useTheme();
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({
@@ -110,7 +113,7 @@ const Auth = () => {
         <div className="bg-card rounded-2xl shadow-glow p-8 space-y-6">
           {/* Logo & Title */}
           <div className="text-center space-y-3">
-            <img src={logo} alt="PageSmith Hub" className="w-16 h-16 mx-auto" />
+            <img src={theme === "dark" ? logoDark : logo} alt="PageSmith Hub" className="w-16 h-16 mx-auto" />
             
             <p className="text-muted-foreground">
               {isLogin ? "Bem-vindo de volta! Entre para continuar" : "Crie sua conta para começar"}
