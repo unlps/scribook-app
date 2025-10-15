@@ -374,7 +374,7 @@ const Dashboard = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{selectedEbook?.title}</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="line-clamp-2">
               {selectedEbook?.description || "Sem descrição"}
             </DialogDescription>
           </DialogHeader>
