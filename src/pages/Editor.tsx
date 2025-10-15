@@ -238,7 +238,7 @@ export default function Editor() {
 
       // Title page
       pdf.addPage();
-      yPosition = 80;
+      yPosition = 20;
       pdf.setFontSize(24);
       const titleText = htmlToText(ebook.title);
       const titleLines = pdf.splitTextToSize(titleText, 170);
@@ -252,7 +252,7 @@ export default function Editor() {
       // Description page
       if (ebook.description) {
         pdf.addPage();
-        yPosition = 80;
+        yPosition = 20;
         pdf.setFontSize(12);
         const descText = htmlToText(ebook.description);
         const descLines = pdf.splitTextToSize(descText, 170);

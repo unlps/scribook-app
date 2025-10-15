@@ -165,7 +165,7 @@ const Dashboard = () => {
 
       // Title page
       pdf.addPage();
-      yPosition = 80;
+      yPosition = 20;
 
       pdf.setFontSize(24);
       const titleText = htmlToText(selectedEbook.title);
@@ -181,7 +181,7 @@ const Dashboard = () => {
       // Description page
       if (selectedEbook.description) {
         pdf.addPage();
-        yPosition = 80;
+        yPosition = 20;
         pdf.setFontSize(12);
         const descText = htmlToText(selectedEbook.description);
         const descLines = pdf.splitTextToSize(descText, 170);
