@@ -130,6 +130,13 @@ const Dashboard = () => {
     if (!selectedEbook) return;
 
     try {
+      // Helper function to convert HTML to plain text
+      const htmlToText = (html: string) => {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || '';
+      };
+
       const { data: chapters } = await supabase
         .from("chapters")
         .select("*")
@@ -161,7 +168,8 @@ const Dashboard = () => {
       yPosition = 80;
 
       pdf.setFontSize(24);
-      const titleLines = pdf.splitTextToSize(selectedEbook.title, 170);
+      const titleText = htmlToText(selectedEbook.title);
+      const titleLines = pdf.splitTextToSize(titleText, 170);
       pdf.text(titleLines, 20, yPosition);
       yPosition += titleLines.length * 12 + 20;
 
@@ -175,7 +183,8 @@ const Dashboard = () => {
         pdf.addPage();
         yPosition = 80;
         pdf.setFontSize(12);
-        const descLines = pdf.splitTextToSize(selectedEbook.description, 170);
+        const descText = htmlToText(selectedEbook.description);
+        const descLines = pdf.splitTextToSize(descText, 170);
         pdf.text(descLines, 20, yPosition);
       }
 
@@ -185,11 +194,12 @@ const Dashboard = () => {
         yPosition = 20;
 
         pdf.setFontSize(18);
-        pdf.text(chapter.title, 20, yPosition);
+        const chapterTitle = htmlToText(chapter.title);
+        pdf.text(chapterTitle, 20, yPosition);
         yPosition += 15;
 
         pdf.setFontSize(12);
-        const plainText = chapter.content.replace(/<[^>]*>/g, '');
+        const plainText = htmlToText(chapter.content);
         const contentLines = pdf.splitTextToSize(plainText, 170);
         
         contentLines.forEach((line: string) => {
@@ -202,7 +212,7 @@ const Dashboard = () => {
         });
       });
 
-      pdf.save(`${selectedEbook.title}.pdf`);
+      pdf.save(`${htmlToText(selectedEbook.title)}.pdf`);
       
       // Update downloads count
       await supabase
