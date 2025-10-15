@@ -14,16 +14,12 @@ import {
   Download,
   Plus,
   Trash2,
-  Image as ImageIcon,
   FileText,
+  Bold,
+  Italic,
+  Heading2,
 } from "lucide-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { ClassicTemplate } from "@/components/templates/ebooks/ClassicTemplate";
-import { MinimalTemplate } from "@/components/templates/ebooks/MinimalTemplate";
-import { VisualTemplate } from "@/components/templates/ebooks/VisualTemplate";
 
 interface Chapter {
   id?: string;
@@ -48,7 +44,7 @@ export default function Editor() {
 
   const [ebook, setEbook] = useState<Ebook | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | number>(0);
+  const [selectedChapterId, setSelectedChapterId] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
@@ -89,7 +85,6 @@ export default function Editor() {
       if (chaptersData && chaptersData.length > 0) {
         setChapters(chaptersData);
       } else {
-        // Se não houver capítulos, criar um inicial
         setChapters([{
           title: "Capítulo 1",
           content: "",
@@ -113,7 +108,6 @@ export default function Editor() {
 
     setSaving(true);
     try {
-      // Salvar metadados do ebook
       const { error: ebookError } = await supabase
         .from("ebooks")
         .update({
@@ -125,7 +119,6 @@ export default function Editor() {
 
       if (ebookError) throw ebookError;
 
-      // Deletar capítulos antigos e inserir novos
       const { error: deleteError } = await supabase
         .from("chapters")
         .delete()
@@ -151,7 +144,6 @@ export default function Editor() {
         description: "Todas as alterações foram salvas.",
       });
 
-      // Recarregar para obter IDs atualizados
       await loadEbook();
     } catch (error: any) {
       toast({
@@ -196,43 +188,47 @@ export default function Editor() {
     setChapters(newChapters);
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = () => {
     if (!ebook) return;
 
     try {
-      toast({
-        title: "Gerando PDF...",
-        description: "Isso pode levar alguns segundos.",
-      });
+      const pdf = new jsPDF();
+      let yPosition = 20;
 
-      const previewElement = document.getElementById("ebook-preview");
-      if (!previewElement) return;
+      // Cover page
+      pdf.setFontSize(24);
+      pdf.text(ebook.title, 20, yPosition);
+      yPosition += 20;
 
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      // Capturar cada capítulo como uma página
-      for (let i = 0; i < chapters.length; i++) {
-        const chapterElement = document.getElementById(`chapter-${i}`);
-        if (!chapterElement) continue;
-
-        const canvas = await html2canvas(chapterElement, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-        if (i > 0) {
-          pdf.addPage();
-        }
-
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+      if (ebook.description) {
+        pdf.setFontSize(12);
+        const descLines = pdf.splitTextToSize(ebook.description, 170);
+        pdf.text(descLines, 20, yPosition);
       }
+
+      // Chapters
+      chapters.forEach((chapter, index) => {
+        pdf.addPage();
+        yPosition = 20;
+
+        pdf.setFontSize(18);
+        pdf.text(chapter.title, 20, yPosition);
+        yPosition += 15;
+
+        pdf.setFontSize(12);
+        // Remove HTML tags and convert to plain text
+        const plainText = chapter.content.replace(/<[^>]*>/g, '');
+        const contentLines = pdf.splitTextToSize(plainText, 170);
+        
+        contentLines.forEach((line: string) => {
+          if (yPosition > 280) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, 20, yPosition);
+          yPosition += 7;
+        });
+      });
 
       pdf.save(`${ebook.title}.pdf`);
 
@@ -249,32 +245,9 @@ export default function Editor() {
     }
   };
 
-  const renderTemplate = () => {
-    if (!ebook) return null;
-
-    const templateProps = {
-      title: ebook.title,
-      author: "Autor",
-      coverImage: ebook.cover_image || "",
-      chapters: chapters.map((ch) => ({
-        title: ch.title,
-        content: ch.content,
-      })),
-    };
-
-    switch (ebook.template_id) {
-      case "minimal":
-        return <MinimalTemplate {...templateProps} />;
-      case "visual":
-        return <VisualTemplate {...templateProps} />;
-      default:
-        return <ClassicTemplate {...templateProps} />;
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando editor...</p>
@@ -285,25 +258,14 @@ export default function Editor() {
 
   if (!ebook) return null;
 
-  const selectedChapter = chapters[Number(selectedChapterId)];
-
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ align: [] }],
-      ["link", "image"],
-      ["clean"],
-    ],
-  };
+  const selectedChapter = chapters[selectedChapterId];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -317,7 +279,7 @@ export default function Editor() {
                 <p className="text-sm text-muted-foreground">Editor de Ebook</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -330,10 +292,10 @@ export default function Editor() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setActiveTab("preview")}
+                onClick={() => setActiveTab(activeTab === "edit" ? "preview" : "edit")}
               >
                 <Eye className="h-4 w-4 mr-2" />
-                Visualizar
+                {activeTab === "edit" ? "Visualizar" : "Editar"}
               </Button>
               <Button size="sm" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4 mr-2" />
@@ -347,7 +309,7 @@ export default function Editor() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
             <TabsTrigger value="edit">
               <FileText className="h-4 w-4 mr-2" />
               Editar
@@ -358,10 +320,10 @@ export default function Editor() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="edit" className="mt-6">
+          <TabsContent value="edit" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Sidebar - Lista de Capítulos */}
-              <Card className="lg:col-span-1">
+              {/* Sidebar - Chapter List */}
+              <Card className="lg:col-span-1 h-fit">
                 <CardHeader>
                   <CardTitle className="text-lg">Capítulos</CardTitle>
                 </CardHeader>
@@ -369,27 +331,29 @@ export default function Editor() {
                   {chapters.map((chapter, index) => (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                         selectedChapterId === index
                           ? "bg-primary text-primary-foreground"
                           : "hover:bg-muted"
                       }`}
                       onClick={() => setSelectedChapterId(index)}
                     >
-                      <span className="text-sm truncate flex-1">
+                      <span className="text-sm truncate flex-1 pr-2">
                         {chapter.title}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteChapter(index);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {chapters.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteChapter(index);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                   <Button
@@ -404,16 +368,16 @@ export default function Editor() {
                 </CardContent>
               </Card>
 
-              {/* Editor Principal */}
+              {/* Main Editor */}
               <div className="lg:col-span-3 space-y-6">
-                {/* Metadados do Ebook */}
+                {/* Ebook Info */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Informações do Ebook</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Título</label>
+                      <label className="text-sm font-medium mb-2 block">Título</label>
                       <Input
                         value={ebook.title}
                         onChange={(e) =>
@@ -423,7 +387,7 @@ export default function Editor() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Descrição</label>
+                      <label className="text-sm font-medium mb-2 block">Descrição</label>
                       <Textarea
                         value={ebook.description || ""}
                         onChange={(e) =>
@@ -436,7 +400,7 @@ export default function Editor() {
                   </CardContent>
                 </Card>
 
-                {/* Editor do Capítulo Selecionado */}
+                {/* Chapter Editor */}
                 {selectedChapter && (
                   <Card>
                     <CardHeader>
@@ -444,17 +408,13 @@ export default function Editor() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium">
+                        <label className="text-sm font-medium mb-2 block">
                           Título do Capítulo
                         </label>
                         <Input
                           value={selectedChapter.title}
                           onChange={(e) =>
-                            updateChapter(
-                              Number(selectedChapterId),
-                              "title",
-                              e.target.value
-                            )
+                            updateChapter(selectedChapterId, "title", e.target.value)
                           }
                           placeholder="Título do capítulo"
                         />
@@ -463,18 +423,14 @@ export default function Editor() {
                         <label className="text-sm font-medium mb-2 block">
                           Conteúdo
                         </label>
-                        <ReactQuill
-                          theme="snow"
+                        <Textarea
                           value={selectedChapter.content}
-                          onChange={(value) =>
-                            updateChapter(
-                              Number(selectedChapterId),
-                              "content",
-                              value
-                            )
+                          onChange={(e) =>
+                            updateChapter(selectedChapterId, "content", e.target.value)
                           }
-                          modules={quillModules}
-                          className="h-96 mb-16"
+                          placeholder="Escreva o conteúdo do capítulo..."
+                          rows={20}
+                          className="font-mono"
                         />
                       </div>
                     </CardContent>
@@ -484,34 +440,45 @@ export default function Editor() {
             </div>
           </TabsContent>
 
-          <TabsContent value="preview" className="mt-6">
+          <TabsContent value="preview" className="mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Visualização do Ebook</CardTitle>
               </CardHeader>
               <CardContent>
-                <div id="ebook-preview" className="bg-white p-8 rounded-lg">
-                  {renderTemplate()}
-                  
-                  {/* Capítulos individuais para PDF */}
-                  <div className="hidden">
-                    {chapters.map((chapter, index) => (
-                      <div
-                        key={index}
-                        id={`chapter-${index}`}
-                        className="bg-white p-8 mb-8"
-                        style={{ minHeight: "297mm", width: "210mm" }}
-                      >
-                        <h2 className="text-2xl font-bold mb-4">
-                          {chapter.title}
-                        </h2>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: chapter.content }}
-                          className="prose max-w-none"
-                        />
-                      </div>
-                    ))}
+                <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg">
+                  {/* Cover */}
+                  <div className="text-center space-y-4 pb-12 border-b">
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                      {ebook.title}
+                    </h1>
+                    {ebook.description && (
+                      <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                        {ebook.description}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Chapters */}
+                  {chapters.map((chapter, index) => (
+                    <div key={index} className="space-y-6">
+                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {chapter.title}
+                      </h2>
+                      <div className="prose prose-lg dark:prose-invert max-w-none">
+                        {chapter.content.split('\n').map((paragraph, i) => (
+                          paragraph.trim() && (
+                            <p key={i} className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                              {paragraph}
+                            </p>
+                          )
+                        ))}
+                      </div>
+                      {index < chapters.length - 1 && (
+                        <div className="border-t my-8"></div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
