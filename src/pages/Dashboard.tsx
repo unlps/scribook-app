@@ -138,7 +138,7 @@ const Dashboard = () => {
       const pdf = new jsPDF();
       let yPosition = 20;
 
-      // Cover image
+      // Cover page with image
       if (selectedEbook.cover_image) {
         try {
           const img = new Image();
@@ -146,55 +146,46 @@ const Dashboard = () => {
           await new Promise<void>((resolve) => {
             img.onload = () => resolve();
           });
-          const imgWidth = 80;
+          const imgWidth = 170;
           const imgHeight = (img.height / img.width) * imgWidth;
-          const x = (210 - imgWidth) / 2; // Center horizontally
-          pdf.addImage(img, 'JPEG', x, yPosition, imgWidth, imgHeight);
+          pdf.addImage(img, 'JPEG', 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 20;
         } catch (error) {
           console.error('Erro ao adicionar capa ao PDF:', error);
         }
       }
 
-      // Title
-      pdf.setFontSize(20);
+      pdf.setFontSize(24);
       pdf.text(selectedEbook.title, 20, yPosition);
-      yPosition += 15;
+      yPosition += 20;
 
-      // Description
       if (selectedEbook.description) {
         pdf.setFontSize(12);
-        pdf.text(selectedEbook.description, 20, yPosition);
-        yPosition += 10;
+        const descLines = pdf.splitTextToSize(selectedEbook.description, 170);
+        pdf.text(descLines, 20, yPosition);
       }
-
-      pdf.addPage();
 
       // Chapters
       chapters?.forEach((chapter) => {
-        if (yPosition > 270) {
-          pdf.addPage();
-          yPosition = 20;
-        }
+        pdf.addPage();
+        yPosition = 20;
 
-        pdf.setFontSize(16);
+        pdf.setFontSize(18);
         pdf.text(chapter.title, 20, yPosition);
-        yPosition += 10;
+        yPosition += 15;
 
-        pdf.setFontSize(11);
-        const content = chapter.content.replace(/<[^>]*>/g, "");
-        const lines = pdf.splitTextToSize(content, 170);
+        pdf.setFontSize(12);
+        const plainText = chapter.content.replace(/<[^>]*>/g, '');
+        const contentLines = pdf.splitTextToSize(plainText, 170);
         
-        lines.forEach((line: string) => {
-          if (yPosition > 270) {
+        contentLines.forEach((line: string) => {
+          if (yPosition > 280) {
             pdf.addPage();
             yPosition = 20;
           }
           pdf.text(line, 20, yPosition);
           yPosition += 7;
         });
-
-        yPosition += 10;
       });
 
       pdf.save(`${selectedEbook.title}.pdf`);

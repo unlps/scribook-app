@@ -249,10 +249,9 @@ export default function Editor() {
           await new Promise<void>((resolve) => {
             img.onload = () => resolve();
           });
-          const imgWidth = 80;
+          const imgWidth = 170;
           const imgHeight = (img.height / img.width) * imgWidth;
-          const x = (210 - imgWidth) / 2; // Center horizontally
-          pdf.addImage(img, 'JPEG', x, yPosition, imgWidth, imgHeight);
+          pdf.addImage(img, 'JPEG', 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 20;
         } catch (error) {
           console.error('Erro ao adicionar capa ao PDF:', error);
@@ -268,8 +267,6 @@ export default function Editor() {
         const descLines = pdf.splitTextToSize(ebook.description, 170);
         pdf.text(descLines, 20, yPosition);
       }
-
-      pdf.addPage();
 
       // Chapters
       chapters.forEach((chapter, index) => {
