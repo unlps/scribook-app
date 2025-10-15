@@ -419,7 +419,7 @@ const CreateEbook = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="cover">Capa (opcional)</Label>
-                  <Input id="cover" type="file" accept="image/*" onChange={e => setCoverImage(e.target.files?.[0] || null)} className="cursor-pointer" />
+                  <Input id="cover" type="file" accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={e => setCoverImage(e.target.files?.[0] || null)} className="cursor-pointer" />
                   {coverImage && <p className="text-sm text-muted-foreground">
                       Imagem selecionada: {coverImage.name}
                     </p>}
