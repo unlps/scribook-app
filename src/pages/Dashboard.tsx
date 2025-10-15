@@ -334,9 +334,9 @@ const Dashboard = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Ebook
               </Button>
-            </Card> : <Carousel className="w-full">
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {ebooks.map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+            </Card> : <Carousel className="w-full max-w-full">
+              <CarouselContent className="-ml-2 md:-ml-3">
+                {ebooks.map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-3 basis-[45%] md:basis-1/3 lg:basis-1/4">
                     <Card 
                       className="p-3 hover:shadow-card transition-shadow cursor-pointer"
                       onClick={() => setSelectedEbook(ebook)}
@@ -382,9 +382,9 @@ const Dashboard = () => {
               Ver todos <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {["Romance", "Thriller", "Inspiração", "Ficção Científica", "Mistério"].map(genre => <CarouselItem key={genre} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+          <Carousel className="w-full max-w-full">
+            <CarouselContent className="-ml-2 md:-ml-3">
+              {["Romance", "Thriller", "Inspiração", "Ficção Científica", "Mistério"].map(genre => <CarouselItem key={genre} className="pl-2 md:pl-3 basis-[45%] md:basis-1/3 lg:basis-1/4">
                   <Card className="p-6 hover:shadow-card transition-shadow cursor-pointer bg-gradient-secondary">
                     <h4 className="font-semibold text-white text-center">{genre}</h4>
                   </Card>
