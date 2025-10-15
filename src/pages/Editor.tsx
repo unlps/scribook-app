@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
-import jsPDF from "jspdf";
+import html2pdf from "html2pdf.js";
 interface Chapter {
   id?: string;
   title: string;
@@ -209,78 +209,90 @@ export default function Editor() {
   const handleDownloadPDF = async () => {
     if (!ebook) return;
     try {
-      // Helper function to convert HTML to plain text
+      // Helper function to convert HTML to plain text for filename
       const htmlToText = (html: string) => {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
       };
-      
-      const pdf = new jsPDF();
-      let yPosition = 20;
 
-      // Cover page with image
+      // Create a container for the PDF content
+      const container = document.createElement('div');
+      container.style.width = '210mm';
+      container.style.padding = '20mm';
+      container.style.backgroundColor = 'white';
+      container.style.color = 'black';
+      container.style.fontFamily = 'Arial, sans-serif';
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+
+      // Add cover image if exists
       if (coverImagePreview) {
-        try {
-          const img = new Image();
-          img.src = coverImagePreview;
-          await new Promise<void>(resolve => {
-            img.onload = () => resolve();
-          });
-          const imgWidth = 170;
-          const imgHeight = img.height / img.width * imgWidth;
-          pdf.addImage(img, 'JPEG', 20, yPosition, imgWidth, imgHeight);
-          yPosition += imgHeight + 20;
-        } catch (error) {
-          console.error('Erro ao adicionar capa ao PDF:', error);
-        }
+        const coverDiv = document.createElement('div');
+        coverDiv.style.textAlign = 'center';
+        coverDiv.style.marginBottom = '40px';
+        coverDiv.innerHTML = `<img src="${coverImagePreview}" style="max-width: 100%; height: auto; border-radius: 8px;" />`;
+        container.appendChild(coverDiv);
       }
 
-      // Title page
-      pdf.addPage();
-      yPosition = 80;
-      pdf.setFontSize(24);
-      const titleText = htmlToText(ebook.title);
-      const titleLines = pdf.splitTextToSize(titleText, 170);
-      pdf.text(titleLines, 20, yPosition);
-      yPosition += titleLines.length * 12 + 20;
-      if (ebook.author) {
-        pdf.setFontSize(14);
-        pdf.text(`Escrito por ${ebook.author}`, 20, yPosition);
-      }
+      // Add title page
+      const titleDiv = document.createElement('div');
+      titleDiv.style.marginTop = '60px';
+      titleDiv.style.marginBottom = '40px';
+      titleDiv.innerHTML = `
+        <h1 style="font-size: 32px; margin-bottom: 20px; font-weight: bold;">${ebook.title}</h1>
+        ${ebook.author ? `<p style="font-size: 18px; color: #666;">Escrito por ${ebook.author}</p>` : ''}
+      `;
+      container.appendChild(titleDiv);
 
-      // Description page
+      // Add description
       if (ebook.description) {
-        pdf.addPage();
-        yPosition = 80;
-        pdf.setFontSize(12);
-        const descText = htmlToText(ebook.description);
-        const descLines = pdf.splitTextToSize(descText, 170);
-        pdf.text(descLines, 20, yPosition);
+        const descDiv = document.createElement('div');
+        descDiv.style.marginBottom = '40px';
+        descDiv.style.fontSize = '14px';
+        descDiv.style.lineHeight = '1.6';
+        descDiv.innerHTML = ebook.description;
+        container.appendChild(descDiv);
       }
 
-      // Chapters
-      chapters.forEach((chapter) => {
-        pdf.addPage();
-        yPosition = 20;
-        pdf.setFontSize(18);
-        const chapterTitle = htmlToText(chapter.title);
-        pdf.text(chapterTitle, 20, yPosition);
-        yPosition += 15;
-        pdf.setFontSize(12);
-        const plainText = htmlToText(chapter.content);
-        const contentLines = pdf.splitTextToSize(plainText, 170);
-        contentLines.forEach((line: string) => {
-          if (yPosition > 280) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          pdf.text(line, 20, yPosition);
-          yPosition += 7;
-        });
+      // Add chapters
+      chapters.forEach((chapter, index) => {
+        const chapterDiv = document.createElement('div');
+        chapterDiv.style.pageBreakBefore = index > 0 ? 'always' : 'auto';
+        chapterDiv.style.marginBottom = '30px';
+        
+        const chapterTitle = document.createElement('h2');
+        chapterTitle.style.fontSize = '24px';
+        chapterTitle.style.marginBottom = '20px';
+        chapterTitle.style.fontWeight = 'bold';
+        chapterTitle.innerHTML = chapter.title;
+        chapterDiv.appendChild(chapterTitle);
+        
+        const chapterContent = document.createElement('div');
+        chapterContent.style.fontSize = '14px';
+        chapterContent.style.lineHeight = '1.8';
+        chapterContent.innerHTML = chapter.content;
+        chapterDiv.appendChild(chapterContent);
+        
+        container.appendChild(chapterDiv);
       });
+
+      document.body.appendChild(container);
+
+      // Generate PDF with html2pdf
+      const opt = {
+        margin: 10,
+        filename: `${htmlToText(ebook.title)}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
+
+      await html2pdf().set(opt).from(container).save();
       
-      pdf.save(`${htmlToText(ebook.title)}.pdf`);
+      document.body.removeChild(container);
+
       toast({
         title: "PDF gerado!",
         description: "O download foi iniciado."
