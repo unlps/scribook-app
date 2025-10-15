@@ -106,10 +106,32 @@ const MyBooks = () => {
           await new Promise<void>((resolve) => {
             img.onload = () => resolve();
           });
-          const imgWidth = 170;
-          const imgHeight = (img.height / img.width) * imgWidth;
-          pdf.addImage(img, 'JPEG', 20, yPosition, imgWidth, imgHeight);
-          yPosition += imgHeight + 20;
+          
+          // Get page dimensions
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          
+          // Calculate dimensions to cover entire page
+          const imgRatio = img.width / img.height;
+          const pageRatio = pageWidth / pageHeight;
+          
+          let finalWidth, finalHeight, xOffset, yOffset;
+          
+          if (imgRatio > pageRatio) {
+            // Image is wider - fit to height and crop width
+            finalHeight = pageHeight;
+            finalWidth = finalHeight * imgRatio;
+            xOffset = (pageWidth - finalWidth) / 2;
+            yOffset = 0;
+          } else {
+            // Image is taller - fit to width and crop height
+            finalWidth = pageWidth;
+            finalHeight = finalWidth / imgRatio;
+            xOffset = 0;
+            yOffset = (pageHeight - finalHeight) / 2;
+          }
+          
+          pdf.addImage(img, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
         } catch (error) {
           console.error('Erro ao adicionar capa ao PDF:', error);
         }
