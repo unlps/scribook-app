@@ -410,8 +410,17 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Tipo</p>
-                <p className="font-medium">{selectedEbook?.type}</p>
+                <p className="text-sm text-muted-foreground">Criado em</p>
+                <p className="font-medium">
+                  {selectedEbook?.created_at 
+                    ? new Date(selectedEbook.created_at).toLocaleDateString('pt-PT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                    : '-'
+                  }
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Páginas</p>
