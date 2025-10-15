@@ -208,6 +208,13 @@ export default function Editor() {
   };
   const handleDownloadPDF = async () => {
     if (!ebook) return;
+    
+    const loadingToast = toast({
+      title: "Gerando PDF...",
+      description: "Por favor, aguarde.",
+      duration: 30000
+    });
+
     try {
       // Helper function to convert HTML to plain text for filename
       const htmlToText = (html: string) => {
@@ -223,16 +230,19 @@ export default function Editor() {
       container.style.backgroundColor = 'white';
       container.style.color = 'black';
       container.style.fontFamily = 'Arial, sans-serif';
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
+      container.style.position = 'fixed';
+      container.style.left = '0';
       container.style.top = '0';
+      container.style.zIndex = '-1';
+      container.style.opacity = '0';
+      container.style.pointerEvents = 'none';
 
       // Add cover image if exists
       if (coverImagePreview) {
         const coverDiv = document.createElement('div');
         coverDiv.style.textAlign = 'center';
         coverDiv.style.marginBottom = '40px';
-        coverDiv.innerHTML = `<img src="${coverImagePreview}" style="max-width: 100%; height: auto; border-radius: 8px;" />`;
+        coverDiv.innerHTML = `<img src="${coverImagePreview}" style="max-width: 100%; height: auto; border-radius: 8px;" crossorigin="anonymous" />`;
         container.appendChild(coverDiv);
       }
 
@@ -280,19 +290,38 @@ export default function Editor() {
 
       document.body.appendChild(container);
 
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Generate PDF with html2pdf
       const opt = {
-        margin: 10,
-        filename: `${htmlToText(ebook.title)}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: `${htmlToText(ebook.title) || 'ebook'}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.95 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait' as const 
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       await html2pdf().set(opt).from(container).save();
       
-      document.body.removeChild(container);
+      // Clean up
+      setTimeout(() => {
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
+      }, 100);
 
+      loadingToast.dismiss();
       toast({
         title: "PDF gerado!",
         description: "O download foi iniciado."
