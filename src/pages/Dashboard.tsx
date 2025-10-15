@@ -372,14 +372,7 @@ const Dashboard = () => {
       {/* Ebook Details Dialog */}
       <Dialog open={!!selectedEbook} onOpenChange={() => setSelectedEbook(null)}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{selectedEbook?.title}</DialogTitle>
-            <DialogDescription className="line-clamp-2">
-              {selectedEbook?.description || "Sem descrição"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
+          <div className="space-y-4">
             {selectedEbook?.cover_image && (
               <div className="flex justify-center">
                 <img 
@@ -389,6 +382,18 @@ const Dashboard = () => {
                 />
               </div>
             )}
+            
+            <div className="space-y-3">
+              <h2 
+                className="text-lg font-semibold leading-none tracking-tight"
+                dangerouslySetInnerHTML={{ __html: selectedEbook?.title || "" }}
+              />
+              <p 
+                className="text-sm text-muted-foreground line-clamp-3"
+                dangerouslySetInnerHTML={{ __html: selectedEbook?.description || "Sem descrição" }}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Tipo</p>
