@@ -36,6 +36,7 @@ interface Ebook {
   description: string;
   cover_image: string | null;
   template_id: string | null;
+  author: string | null;
 }
 
 export default function Editor() {
@@ -142,6 +143,7 @@ export default function Editor() {
           description: ebook.description,
           pages: chapters.length,
           cover_image: coverImageUrl,
+          author: ebook.author,
         })
         .eq("id", ebook.id);
 
@@ -258,9 +260,20 @@ export default function Editor() {
         }
       }
 
+      // Title page
+      pdf.addPage();
+      yPosition = 80;
+
       pdf.setFontSize(24);
-      pdf.text(ebook.title, 20, yPosition);
-      yPosition += 20;
+      const titleLines = pdf.splitTextToSize(ebook.title, 170);
+      pdf.text(titleLines, 20, yPosition);
+      yPosition += titleLines.length * 12 + 20;
+
+      if (ebook.author) {
+        pdf.setFontSize(14);
+        pdf.text(`Escrito por ${ebook.author}`, 20, yPosition);
+        yPosition += 20;
+      }
 
       if (ebook.description) {
         pdf.setFontSize(12);
@@ -460,6 +473,16 @@ export default function Editor() {
                       />
                     </div>
                     <div>
+                      <label className="text-sm font-medium mb-2 block">Autor</label>
+                      <Input
+                        value={ebook.author || ""}
+                        onChange={(e) =>
+                          setEbook({ ...ebook, author: e.target.value })
+                        }
+                        placeholder="Nome do autor"
+                      />
+                    </div>
+                    <div>
                       <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
                       {coverImagePreview ? (
                         <div className="relative">
@@ -546,19 +569,28 @@ export default function Editor() {
               <CardContent>
                 <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg">
                   {/* Cover */}
-                  <div className="text-center space-y-4 pb-12 border-b">
-                    {coverImagePreview && (
-                      <div className="flex justify-center mb-6">
+                  {coverImagePreview && (
+                    <div className="text-center pb-12 border-b">
+                      <div className="flex justify-center">
                         <img 
                           src={coverImagePreview} 
                           alt={ebook.title}
-                          className="w-64 h-auto rounded-lg shadow-lg"
+                          className="w-full max-w-md h-auto rounded-lg shadow-lg"
                         />
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  {/* Title Page */}
+                  <div className="text-center space-y-6 pb-12 border-b">
                     <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
                       {ebook.title}
                     </h1>
+                    {ebook.author && (
+                      <p className="text-xl text-gray-700 dark:text-gray-300">
+                        Escrito por {ebook.author}
+                      </p>
+                    )}
                     {ebook.description && (
                       <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                         {ebook.description}

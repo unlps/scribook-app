@@ -54,6 +54,7 @@ export type Database = {
       }
       ebooks: {
         Row: {
+          author: string | null
           cover_image: string | null
           created_at: string
           description: string | null
@@ -69,6 +70,7 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          author?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          author?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null

@@ -24,6 +24,7 @@ interface Ebook {
   downloads: number;
   cover_image: string;
   created_at: string;
+  author: string | null;
 }
 interface Template {
   id: string;
@@ -155,9 +156,20 @@ const Dashboard = () => {
         }
       }
 
+      // Title page
+      pdf.addPage();
+      yPosition = 80;
+
       pdf.setFontSize(24);
-      pdf.text(selectedEbook.title, 20, yPosition);
-      yPosition += 20;
+      const titleLines = pdf.splitTextToSize(selectedEbook.title, 170);
+      pdf.text(titleLines, 20, yPosition);
+      yPosition += titleLines.length * 12 + 20;
+
+      if (selectedEbook.author) {
+        pdf.setFontSize(14);
+        pdf.text(`Escrito por ${selectedEbook.author}`, 20, yPosition);
+        yPosition += 20;
+      }
 
       if (selectedEbook.description) {
         pdf.setFontSize(12);
