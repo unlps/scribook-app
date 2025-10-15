@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -31,7 +32,7 @@ interface Profile {
 
 const Account = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -173,7 +174,10 @@ const Account = () => {
                 </div>
                 <span className="font-medium">Modo Escuro</span>
               </div>
-              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+              <Switch 
+                checked={theme === "dark"} 
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} 
+              />
             </div>
           </Card>
         </div>
