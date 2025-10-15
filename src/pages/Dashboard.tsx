@@ -313,10 +313,14 @@ const Dashboard = () => {
                           <BookOpen className="h-12 w-12 text-white" />
                         )}
                       </div>
-                      <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
-                      <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
-                        {ebook.description || "Sem descrição"}
-                      </p>
+                      <h4 
+                        className="font-semibold mb-1 text-sm line-clamp-1"
+                        dangerouslySetInnerHTML={{ __html: ebook.title }}
+                      />
+                      <p 
+                        className="text-xs text-muted-foreground mb-2 line-clamp-1"
+                        dangerouslySetInnerHTML={{ __html: ebook.description || "Sem descrição" }}
+                      />
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />
