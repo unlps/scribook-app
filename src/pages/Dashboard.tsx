@@ -314,7 +314,7 @@ const Dashboard = () => {
                         )}
                       </div>
                       <h4 className="font-semibold mb-1 text-sm line-clamp-1">{ebook.title}</h4>
-                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
                         {ebook.description || "Sem descrição"}
                       </p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
