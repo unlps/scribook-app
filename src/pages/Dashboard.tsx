@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles, ChevronRight } from "lucide-react";
+import { Plus, BookOpen, Eye, Download, MessageSquare, Sparkles, ChevronRight, Trash2, Edit } from "lucide-react";
 import logo from "@/assets/logo.png";
 import BottomNav from "@/components/BottomNav";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import jsPDF from "jspdf";
 interface Profile {
   full_name: string;
   email: string;
@@ -35,6 +37,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedEbook, setSelectedEbook] = useState<Ebook | null>(null);
   const [stats, setStats] = useState({
     totalViews: 0,
     totalDownloads: 0,
@@ -96,6 +99,104 @@ const Dashboard = () => {
     } = await supabase.from("templates").select("*").limit(3);
     if (templatesData) {
       setTemplates(templatesData);
+    }
+  };
+
+  const handleDeleteEbook = async () => {
+    if (!selectedEbook) return;
+
+    const { error } = await supabase.from("ebooks").delete().eq("id", selectedEbook.id);
+    
+    if (error) {
+      toast({
+        title: "Erro ao apagar",
+        description: "Não foi possível apagar o ebook",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Ebook apagado",
+      description: "O ebook foi apagado com sucesso"
+    });
+    
+    setSelectedEbook(null);
+    fetchData();
+  };
+
+  const handleDownloadEbook = async () => {
+    if (!selectedEbook) return;
+
+    try {
+      const { data: chapters } = await supabase
+        .from("chapters")
+        .select("*")
+        .eq("ebook_id", selectedEbook.id)
+        .order("chapter_order", { ascending: true });
+
+      const pdf = new jsPDF();
+      let yPosition = 20;
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.text(selectedEbook.title, 20, yPosition);
+      yPosition += 15;
+
+      // Description
+      if (selectedEbook.description) {
+        pdf.setFontSize(12);
+        pdf.text(selectedEbook.description, 20, yPosition);
+        yPosition += 10;
+      }
+
+      // Chapters
+      chapters?.forEach((chapter) => {
+        if (yPosition > 270) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(16);
+        pdf.text(chapter.title, 20, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(11);
+        const content = chapter.content.replace(/<[^>]*>/g, "");
+        const lines = pdf.splitTextToSize(content, 170);
+        
+        lines.forEach((line: string) => {
+          if (yPosition > 270) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, 20, yPosition);
+          yPosition += 7;
+        });
+
+        yPosition += 10;
+      });
+
+      pdf.save(`${selectedEbook.title}.pdf`);
+      
+      // Update downloads count
+      await supabase
+        .from("ebooks")
+        .update({ downloads: selectedEbook.downloads + 1 })
+        .eq("id", selectedEbook.id);
+
+      toast({
+        title: "Download concluído",
+        description: "O ebook foi baixado com sucesso"
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Erro no download",
+        description: "Não foi possível fazer o download",
+        variant: "destructive"
+      });
     }
   };
   return <div className="min-h-screen bg-background">
@@ -176,7 +277,10 @@ const Dashboard = () => {
             </Card> : <Carousel className="w-full">
               <CarouselContent className="-ml-2 md:-ml-4">
                 {ebooks.map(ebook => <CarouselItem key={ebook.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
-                    <Card className="p-3 hover:shadow-card transition-shadow cursor-pointer">
+                    <Card 
+                      className="p-3 hover:shadow-card transition-shadow cursor-pointer"
+                      onClick={() => setSelectedEbook(ebook)}
+                    >
                       <div className="aspect-[2/3] bg-gradient-primary rounded-lg mb-3 flex items-center justify-center">
                         <BookOpen className="h-12 w-12 text-white" />
                       </div>
@@ -235,6 +339,79 @@ const Dashboard = () => {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      {/* Ebook Details Dialog */}
+      <Dialog open={!!selectedEbook} onOpenChange={() => setSelectedEbook(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{selectedEbook?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedEbook?.description || "Sem descrição"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Tipo</p>
+                <p className="font-medium">{selectedEbook?.type}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Páginas</p>
+                <p className="font-medium">{selectedEbook?.pages || 0}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Visualizações</p>
+                <p className="font-medium flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {selectedEbook?.views}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Downloads</p>
+                <p className="font-medium flex items-center gap-1">
+                  <Download className="h-4 w-4" />
+                  {selectedEbook?.downloads}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="destructive"
+              onClick={handleDeleteEbook}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Apagar
+            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={handleDownloadEbook}
+                className="flex-1 sm:flex-none"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </Button>
+              <Button
+                onClick={() => {
+                  navigate(`/editor?id=${selectedEbook?.id}`);
+                  setSelectedEbook(null);
+                }}
+                className="flex-1 sm:flex-none"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default Dashboard;
