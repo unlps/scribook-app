@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import RichTextEditor from "@/components/RichTextEditor";
 import {
   ArrowLeft,
   Save,
@@ -15,9 +15,6 @@ import {
   Plus,
   Trash2,
   FileText,
-  Bold,
-  Italic,
-  Heading2,
   Upload,
   X,
 } from "lucide-react";
@@ -240,6 +237,13 @@ export default function Editor() {
     if (!ebook) return;
 
     try {
+      // Helper function to convert HTML to plain text
+      const htmlToText = (html: string) => {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || '';
+      };
+
       const pdf = new jsPDF();
       let yPosition = 20;
 
@@ -265,7 +269,8 @@ export default function Editor() {
       yPosition = 80;
 
       pdf.setFontSize(24);
-      const titleLines = pdf.splitTextToSize(ebook.title, 170);
+      const titleText = htmlToText(ebook.title);
+      const titleLines = pdf.splitTextToSize(titleText, 170);
       pdf.text(titleLines, 20, yPosition);
       yPosition += titleLines.length * 12 + 20;
 
@@ -279,7 +284,8 @@ export default function Editor() {
         pdf.addPage();
         yPosition = 80;
         pdf.setFontSize(12);
-        const descLines = pdf.splitTextToSize(ebook.description, 170);
+        const descText = htmlToText(ebook.description);
+        const descLines = pdf.splitTextToSize(descText, 170);
         pdf.text(descLines, 20, yPosition);
       }
 
@@ -289,12 +295,12 @@ export default function Editor() {
         yPosition = 20;
 
         pdf.setFontSize(18);
-        pdf.text(chapter.title, 20, yPosition);
+        const chapterTitle = htmlToText(chapter.title);
+        pdf.text(chapterTitle, 20, yPosition);
         yPosition += 15;
 
         pdf.setFontSize(12);
-        // Remove HTML tags and convert to plain text
-        const plainText = chapter.content.replace(/<[^>]*>/g, '');
+        const plainText = htmlToText(chapter.content);
         const contentLines = pdf.splitTextToSize(plainText, 170);
         
         contentLines.forEach((line: string) => {
@@ -307,7 +313,7 @@ export default function Editor() {
         });
       });
 
-      pdf.save(`${ebook.title}.pdf`);
+      pdf.save(`${htmlToText(ebook.title)}.pdf`);
 
       toast({
         title: "PDF gerado!",
@@ -466,23 +472,24 @@ export default function Editor() {
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <Input
-                          value={ebook.title}
-                          onChange={(e) =>
-                            setEbook({ ...ebook, title: e.target.value })
+                        <RichTextEditor
+                          content={ebook.title}
+                          onChange={(content) =>
+                            setEbook({ ...ebook, title: content })
                           }
                           placeholder="Título do ebook"
+                          className="min-h-[100px]"
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <Textarea
-                          value={ebook.description || ""}
-                          onChange={(e) =>
-                            setEbook({ ...ebook, description: e.target.value })
+                        <RichTextEditor
+                          content={ebook.description || ""}
+                          onChange={(content) =>
+                            setEbook({ ...ebook, description: content })
                           }
                           placeholder="Descrição do ebook"
-                          rows={3}
+                          className="min-h-[200px]"
                         />
                       </div>
                       <div>
@@ -546,26 +553,26 @@ export default function Editor() {
                         <label className="text-sm font-medium mb-2 block">
                           Título do Capítulo
                         </label>
-                        <Input
-                          value={selectedChapter.title}
-                          onChange={(e) =>
-                            updateChapter(selectedChapterId, "title", e.target.value)
+                        <RichTextEditor
+                          content={selectedChapter.title}
+                          onChange={(content) =>
+                            updateChapter(selectedChapterId, "title", content)
                           }
                           placeholder="Título do capítulo"
+                          className="min-h-[100px]"
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">
                           Conteúdo
                         </label>
-                        <Textarea
-                          value={selectedChapter.content}
-                          onChange={(e) =>
-                            updateChapter(selectedChapterId, "content", e.target.value)
+                        <RichTextEditor
+                          content={selectedChapter.content}
+                          onChange={(content) =>
+                            updateChapter(selectedChapterId, "content", content)
                           }
                           placeholder="Escreva o conteúdo do capítulo..."
-                          rows={20}
-                          className="font-mono"
+                          className="min-h-[400px]"
                         />
                       </div>
                     </CardContent>
@@ -597,9 +604,10 @@ export default function Editor() {
 
                   {/* Title Page */}
                   <div className="text-center space-y-6 pb-12 border-b">
-                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                      {ebook.title}
-                    </h1>
+                    <div 
+                      className="text-4xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: ebook.title }}
+                    />
                     {ebook.author && (
                       <p className="text-xl text-gray-700 dark:text-gray-300">
                         Escrito por {ebook.author}
@@ -610,27 +618,24 @@ export default function Editor() {
                   {/* Description Page */}
                   {ebook.description && (
                     <div className="pb-12 border-b">
-                      <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {ebook.description}
-                      </p>
+                      <div 
+                        className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: ebook.description }}
+                      />
                     </div>
                   )}
 
                   {/* Chapters */}
                   {chapters.map((chapter, index) => (
                     <div key={index} className="space-y-6">
-                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        {chapter.title}
-                      </h2>
-                      <div className="prose prose-lg dark:prose-invert max-w-none">
-                        {chapter.content.split('\n').map((paragraph, i) => (
-                          paragraph.trim() && (
-                            <p key={i} className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                              {paragraph}
-                            </p>
-                          )
-                        ))}
-                      </div>
+                      <div 
+                        className="text-3xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: chapter.title }}
+                      />
+                      <div 
+                        className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: chapter.content }}
+                      />
                       {index < chapters.length - 1 && (
                         <div className="border-t my-8"></div>
                       )}
