@@ -100,6 +100,7 @@ const CreateEbook = () => {
         }
       }
 
+      // Create ebook
       const { data: ebook, error } = await supabase.from("ebooks").insert({
         user_id: session.user.id,
         title,
@@ -107,16 +108,35 @@ const CreateEbook = () => {
         type: "standard",
         template_id: selectedTemplate,
         cover_image: coverImageUrl,
+        pages: origin === "import" ? parsedChapters.length : 0,
       }).select().single();
 
       if (error) throw error;
 
+      // If imported from file, save chapters
+      if (origin === "import" && parsedChapters.length > 0) {
+        const chaptersToInsert = parsedChapters.map(chapter => ({
+          ebook_id: ebook.id,
+          title: chapter.title,
+          content: chapter.content,
+          chapter_order: chapter.order,
+        }));
+
+        const { error: chaptersError } = await supabase
+          .from("chapters")
+          .insert(chaptersToInsert);
+
+        if (chaptersError) throw chaptersError;
+      }
+
       toast({
         title: "Ebook criado!",
-        description: "Redirecionando para o editor...",
+        description: origin === "import" 
+          ? `Ebook criado com ${parsedChapters.length} capítulos`
+          : "Redirecionando para o editor...",
       });
 
-      // Redirect to editor (will be created later)
+      // Redirect to dashboard
       navigate("/dashboard");
     } catch (error: any) {
       toast({

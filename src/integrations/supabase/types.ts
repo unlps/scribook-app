@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      chapters: {
+        Row: {
+          chapter_order: number
+          content: string
+          created_at: string
+          ebook_id: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_order?: number
+          content: string
+          created_at?: string
+          ebook_id: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_order?: number
+          content?: string
+          created_at?: string
+          ebook_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_ebook_id_fkey"
+            columns: ["ebook_id"]
+            isOneToOne: false
+            referencedRelation: "ebooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ebooks: {
         Row: {
           cover_image: string | null
