@@ -210,48 +210,51 @@ export default function Editor() {
       const htmlToText = (html: string) => {
         const temp = document.createElement("div");
         temp.innerHTML = html;
-        return (temp.textContent || temp.innerText || "ebook").trim();
+        return (temp.textContent || temp.innerText || "").trim() || "ebook";
       };
 
-      // 1) Contêiner fora da viewport (não invisível)
+      // 1) Contêiner visível mas fora da viewport
       const container = document.createElement("div");
-      container.style.width = "794px"; // ~210mm @ 96dpi
+      container.style.width = "794px"; // A4 @ 96dpi
       container.style.padding = "80px 64px";
       container.style.backgroundColor = "#ffffff";
       container.style.color = "#000000";
       container.style.fontFamily = "Arial, sans-serif";
+      container.style.fontSize = "14px";
+      container.style.lineHeight = "1.8";
       container.style.position = "absolute";
-      container.style.left = "-10000px"; // fora da tela
+      container.style.left = "-10000px";
       container.style.top = "0";
-      container.style.pointerEvents = "none";
 
-      // 2) Capa (com CORS)
+      // 2) Capa com CORS
       if (coverImagePreview) {
         const coverDiv = document.createElement("div");
         coverDiv.style.textAlign = "center";
         coverDiv.style.marginBottom = "40px";
 
-        // cria img via DOM (melhor p/ setar crossOrigin)
         const img = document.createElement("img");
-        img.src = coverImagePreview;
         img.crossOrigin = "anonymous";
+        img.src = coverImagePreview;
         img.style.maxWidth = "100%";
         img.style.height = "auto";
         img.style.borderRadius = "8px";
         coverDiv.appendChild(img);
         container.appendChild(coverDiv);
+
+        // Aguarda imagem carregar
+        await img.decode().catch(() => {});
       }
 
-      // 3) Título / autor
+      // 3) Título e autor
       const titleDiv = document.createElement("div");
       titleDiv.style.marginTop = "20px";
       titleDiv.style.marginBottom = "32px";
       titleDiv.innerHTML = `
-      <h1 style="font-size: 32px; margin-bottom: 12px; font-weight: bold;">
-        ${ebook.title || ""}
-      </h1>
-      ${ebook.author ? `<p style="font-size: 18px; color: #444;">Escrito por ${ebook.author}</p>` : ""}
-    `;
+        <h1 style="font-size: 32px; margin-bottom: 12px; font-weight: bold; color: #000;">
+          ${htmlToText(ebook.title) || "Sem Título"}
+        </h1>
+        ${ebook.author ? `<p style="font-size: 18px; color: #444;">Escrito por ${htmlToText(ebook.author)}</p>` : ""}
+      `;
       container.appendChild(titleDiv);
 
       // 4) Descrição
@@ -260,6 +263,7 @@ export default function Editor() {
         descDiv.style.marginBottom = "40px";
         descDiv.style.fontSize = "14px";
         descDiv.style.lineHeight = "1.7";
+        descDiv.style.color = "#333";
         descDiv.innerHTML = ebook.description;
         container.appendChild(descDiv);
       }
@@ -274,13 +278,16 @@ export default function Editor() {
         h2.style.fontSize = "22px";
         h2.style.marginBottom = "12px";
         h2.style.fontWeight = "bold";
-        h2.innerHTML = chapter.title || `Capítulo ${index + 1}`;
+        h2.style.color = "#000";
+        const chapterTitle = htmlToText(chapter.title) || `Capítulo ${index + 1}`;
+        h2.textContent = chapterTitle;
         wrap.appendChild(h2);
 
         const body = document.createElement("div");
         body.style.fontSize = "14px";
         body.style.lineHeight = "1.8";
-        body.innerHTML = chapter.content || "";
+        body.style.color = "#333";
+        body.innerHTML = chapter.content || "<p>Sem conteúdo.</p>";
         wrap.appendChild(body);
 
         container.appendChild(wrap);
@@ -288,14 +295,17 @@ export default function Editor() {
 
       document.body.appendChild(container);
 
-      // 6) Espera fontes e imagens carregarem
-      try {
-        await (document as any).fonts?.ready;
-      } catch {}
-      const imgs = Array.from(container.querySelectorAll("img"));
-      await Promise.all(imgs.map((i) => (i as HTMLImageElement).decode().catch(() => Promise.resolve())));
+      // 6) Aguarda fontes
+      await document.fonts.ready.catch(() => {});
 
-      // 7) Gera o PDF
+      // Aguarda imagens do conteúdo
+      const allImgs = Array.from(container.querySelectorAll("img")) as HTMLImageElement[];
+      await Promise.all(allImgs.map((img) => img.decode().catch(() => {})));
+
+      // Pequeno delay para garantir renderização
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // 7) Gera PDF
       const opt = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: `${htmlToText(ebook.title) || "ebook"}.pdf`,
@@ -303,8 +313,10 @@ export default function Editor() {
         html2canvas: {
           scale: 2,
           useCORS: true,
+          allowTaint: false,
           backgroundColor: "#ffffff",
           logging: false,
+          windowWidth: 794,
         },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
         pagebreak: { mode: ["css", "legacy"] },
@@ -312,8 +324,11 @@ export default function Editor() {
 
       await html2pdf().set(opt).from(container).save();
 
+      // Cleanup
       setTimeout(() => {
-        if (document.body.contains(container)) document.body.removeChild(container);
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
       }, 100);
 
       loadingToast.dismiss();
