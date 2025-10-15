@@ -119,7 +119,7 @@ const Account = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={scribookIcon} alt="ScriBook" className="w-10 h-10 rounded-lg" />
+            <img src={theme === "dark" ? logoDark : logo} alt="ScriBook" className="w-10 h-10 rounded-lg" />
             <h1 className="text-2xl font-bold">Conta</h1>
           </div>
         </div>
