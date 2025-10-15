@@ -295,7 +295,7 @@ const Dashboard = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Meus Livros</h3>
-            <Button variant="ghost" size="sm" className="text-primary">
+            <Button variant="ghost" size="sm" className="text-primary" onClick={() => navigate("/my-books")}>
               Ver todos <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
