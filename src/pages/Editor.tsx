@@ -18,6 +18,8 @@ import {
   Bold,
   Italic,
   Heading2,
+  Upload,
+  X,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -48,6 +50,8 @@ export default function Editor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ebookId) {
@@ -73,6 +77,7 @@ export default function Editor() {
 
       if (ebookError) throw ebookError;
       setEbook(ebookData);
+      setCoverImagePreview(ebookData.cover_image);
 
       const { data: chaptersData, error: chaptersError } = await supabase
         .from("chapters")
@@ -108,12 +113,35 @@ export default function Editor() {
 
     setSaving(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Upload cover image if new one is selected
+      let coverImageUrl = ebook.cover_image;
+      if (coverImage) {
+        const fileExt = coverImage.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${session.user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('ebook-covers')
+          .upload(filePath, coverImage);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('ebook-covers')
+            .getPublicUrl(filePath);
+          coverImageUrl = publicUrl;
+        }
+      }
+
       const { error: ebookError } = await supabase
         .from("ebooks")
         .update({
           title: ebook.title,
           description: ebook.description,
           pages: chapters.length,
+          cover_image: coverImageUrl,
         })
         .eq("id", ebook.id);
 
@@ -186,6 +214,24 @@ export default function Editor() {
     const newChapters = [...chapters];
     newChapters[index][field] = value;
     setChapters(newChapters);
+  };
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveCoverImage = () => {
+    setCoverImage(null);
+    setCoverImagePreview(null);
+    setEbook({ ...ebook, cover_image: null });
   };
 
   const handleDownloadPDF = () => {
@@ -396,6 +442,42 @@ export default function Editor() {
                         placeholder="Descrição do ebook"
                         rows={3}
                       />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
+                      {coverImagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={coverImagePreview}
+                            alt="Capa"
+                            className="w-full max-w-xs h-auto rounded-lg border"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2"
+                            onClick={handleRemoveCoverImage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCoverImageChange}
+                            className="hidden"
+                            id="cover-upload"
+                          />
+                          <label htmlFor="cover-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">
+                              Clique para fazer upload da capa
+                            </p>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
