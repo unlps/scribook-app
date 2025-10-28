@@ -13,6 +13,7 @@ import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText, Ar
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
 import { EBOOK_TEMPLATES } from "@/components/templates/ebooks";
+import { ebookSchema, chapterSchema } from "@/lib/validations";
 type WizardStep = "origin" | "upload" | "mapping" | "metadata" | "template" | "complete";
 type OriginType = "blank" | "import";
 interface ParsedChapter {
@@ -69,14 +70,48 @@ const CreateEbook = () => {
     }
   };
   const handleCreateEbook = async () => {
-    if (!title || !selectedTemplate) {
+    if (!selectedTemplate) {
       toast({
         title: "Informações faltando",
-        description: "Por favor, preencha o título e escolha um template",
+        description: "Por favor, escolha um template",
         variant: "destructive"
       });
       return;
     }
+
+    // Validate ebook metadata
+    const validationResult = ebookSchema.safeParse({
+      title,
+      description,
+      author
+    });
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: "Erro de validação",
+        description: firstError.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate all chapters if imported
+    if (origin === "import" && parsedChapters.length > 0) {
+      for (const chapter of parsedChapters) {
+        const chapterValidation = chapterSchema.safeParse(chapter);
+        if (!chapterValidation.success) {
+          const firstError = chapterValidation.error.errors[0];
+          toast({
+            title: "Erro de validação no capítulo",
+            description: `${chapter.title}: ${firstError.message}`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     try {
       const {
@@ -198,6 +233,24 @@ const CreateEbook = () => {
     }
   };
   const handleChapterUpdate = (chapterId: string, field: 'title' | 'content', value: string) => {
+    // Apply basic length validation on the fly
+    if (field === 'title' && value.length > 200) {
+      toast({
+        title: "Título muito longo",
+        description: "O título do capítulo deve ter no máximo 200 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (field === 'content' && value.length > 100000) {
+      toast({
+        title: "Conteúdo muito longo",
+        description: "O conteúdo do capítulo deve ter no máximo 100.000 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setParsedChapters(chapters => chapters.map(ch => ch.id === chapterId ? {
       ...ch,
       [field]: value

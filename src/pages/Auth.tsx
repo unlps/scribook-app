@@ -11,6 +11,7 @@ import { BookOpen, Chrome } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
 import authBackground from "@/assets/auth-background.png";
+import { authSchema } from "@/lib/validations";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -48,6 +49,24 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Validate inputs
+      const validationResult = authSchema.safeParse({
+        email,
+        password,
+        fullName: isLogin ? undefined : fullName
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Erro de validação",
+          description: firstError.message,
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       if (isLogin) {
         const {
           error
@@ -147,7 +166,7 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
             </div>
 
             <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>

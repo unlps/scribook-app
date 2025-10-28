@@ -10,6 +10,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { sanitizeHtml } from "@/lib/utils";
+import { ebookSchema, chapterSchema } from "@/lib/validations";
 interface Chapter {
   id?: string;
   title: string;
@@ -93,6 +94,38 @@ export default function Editor() {
   };
   const handleSave = async () => {
     if (!ebook) return;
+
+    // Validate ebook metadata
+    const ebookValidation = ebookSchema.safeParse({
+      title: ebook.title,
+      description: ebook.description,
+      author: ebook.author
+    });
+
+    if (!ebookValidation.success) {
+      const firstError = ebookValidation.error.errors[0];
+      toast({
+        title: "Erro de validação",
+        description: firstError.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate all chapters
+    for (const chapter of chapters) {
+      const chapterValidation = chapterSchema.safeParse(chapter);
+      if (!chapterValidation.success) {
+        const firstError = chapterValidation.error.errors[0];
+        toast({
+          title: "Erro de validação no capítulo",
+          description: `${chapter.title}: ${firstError.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const {
@@ -184,6 +217,24 @@ export default function Editor() {
     }
   };
   const updateChapter = (index: number, field: "title" | "content", value: string) => {
+    // Apply basic length validation on the fly
+    if (field === 'title' && value.length > 200) {
+      toast({
+        title: "Título muito longo",
+        description: "O título do capítulo deve ter no máximo 200 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (field === 'content' && value.length > 100000) {
+      toast({
+        title: "Conteúdo muito longo",
+        description: "O conteúdo do capítulo deve ter no máximo 100.000 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const newChapters = [...chapters];
     newChapters[index][field] = value;
     setChapters(newChapters);

@@ -73,12 +73,30 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    // Log detailed error information server-side only
     console.error('Error in parse-ebook function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Map errors to user-friendly messages
+    let userMessage = 'An error occurred while processing your file. Please try again.';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized') || error.message.includes('auth')) {
+        userMessage = 'Authentication required. Please log in and try again.';
+        statusCode = 401;
+      } else if (error.message.includes('No file')) {
+        userMessage = 'Please provide a file to parse.';
+        statusCode = 400;
+      } else if (error.message.includes('type') || error.message.includes('format')) {
+        userMessage = 'Unsupported file format. Please upload a valid EPUB or PDF file.';
+        statusCode = 400;
+      }
+    }
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: userMessage }),
       { 
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
