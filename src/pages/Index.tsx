@@ -3,13 +3,34 @@ import { Button } from "@/components/ui/button";
 import library1 from "@/assets/library-1.png";
 import library2 from "@/assets/library-2.png";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentImage, setCurrentImage] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   
   const heroImages = [library1, library2];
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro no login com Google:', error);
+      toast.error('Erro ao fazer login com Google. Tente novamente.');
+      setIsLoading(false);
+    }
+  };
   
   const messages = [
     "Crie ebooks padrão, interativos e profissionais incríveis com facilidade",
@@ -80,7 +101,8 @@ const Index = () => {
         {/* Action Buttons */}
         <div className="w-full max-w-md space-y-4">
           <Button 
-            onClick={() => navigate("/auth")} 
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
             variant="outline"
             className="w-full h-14 text-base bg-background border-border hover:bg-accent"
           >
