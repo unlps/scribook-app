@@ -312,7 +312,7 @@ const CreateEbook = () => {
             <Button variant="ghost" size="icon" onClick={() => step === "origin" ? navigate("/dashboard") : handleBack()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={theme === "dark" ? logoDark : logo} alt="Scribook" className="w-10 h-10" />
+            <img src={theme === "dark" ? logoDark : logo} alt="Kutara Mabuku" className="w-10 h-10" />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Criar Novo Ebook

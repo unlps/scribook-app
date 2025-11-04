@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
-import scribookIcon from "@/assets/scribook-icon.jpg";
+import kutaraMabukuIcon from "@/assets/scribook-icon.jpg";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 
@@ -107,9 +107,9 @@ const Account = () => {
     },
     { 
       icon: Info, 
-      label: "Sobre ScriBook", 
+      label: "Sobre Kutara Mabuku", 
       bgColor: "bg-orange-100 dark:bg-orange-900/30", 
-      iconColor: "text-primary" 
+      iconColor: "text-primary"
     },
   ];
 
@@ -119,7 +119,7 @@ const Account = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={theme === "dark" ? logoDark : logo} alt="ScriBook" className="w-10 h-10 rounded-lg" />
+            <img src={theme === "dark" ? logoDark : logo} alt="Kutara Mabuku" className="w-10 h-10 rounded-lg" />
             <h1 className="text-2xl font-bold">Conta</h1>
           </div>
         </div>

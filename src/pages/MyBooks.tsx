@@ -217,7 +217,7 @@ const MyBooks = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={theme === "dark" ? logoDark : logo} alt="ScriBook" className="w-10 h-10" />
+            <img src={theme === "dark" ? logoDark : logo} alt="Kutara Mabuku" className="w-10 h-10" />
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Meus Livros</h1>
           </div>
         </div>

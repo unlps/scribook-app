@@ -268,7 +268,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={theme === "dark" ? logoDark : logo} alt="PageSmith Hub" className="w-10 h-10" />
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">ScriBook</h1>
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Kutara Mabuku</h1>
           </div>
           <Button onClick={() => navigate("/conversas")} variant="ghost" size="icon">
             <MessageSquare className="h-5 w-5" />
