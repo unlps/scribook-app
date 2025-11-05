@@ -218,7 +218,7 @@ const Index = () => {
               {selectedBook?.price !== undefined && (
                 <p className="text-sm">
                   <span className="font-semibold">Preço:</span>{" "}
-                  {selectedBook.price > 0 ? `${selectedBook.price} AOA` : "Grátis"}
+                  {selectedBook.price > 0 ? `${selectedBook.price} MZN` : "Grátis"}
                 </p>
               )}
               

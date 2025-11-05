@@ -523,7 +523,7 @@ const CreateEbook = () => {
 
                 {!isFree && (
                   <div className="space-y-2">
-                    <Label htmlFor="price">Preço (AOA)</Label>
+                    <Label htmlFor="price">Preço (MZN)</Label>
                     <Input 
                       id="price" 
                       type="number" 
