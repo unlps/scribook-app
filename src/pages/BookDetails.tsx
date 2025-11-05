@@ -204,7 +204,7 @@ export default function BookDetails() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-8 py-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
