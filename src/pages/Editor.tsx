@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
@@ -24,6 +26,8 @@ interface Ebook {
   cover_image: string | null;
   template_id: string | null;
   author: string | null;
+  genre: string | null;
+  price: number;
 }
 export default function Editor() {
   const [searchParams] = useSearchParams();
@@ -40,13 +44,23 @@ export default function Editor() {
   const [activeTab, setActiveTab] = useState("edit");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
+  
   useEffect(() => {
     if (!ebookId) {
       navigate("/dashboard");
       return;
     }
     loadEbook();
+    fetchGenres();
   }, [ebookId]);
+
+  const fetchGenres = async () => {
+    const { data } = await supabase.from("genres").select("*").order("name");
+    if (data) {
+      setGenres(data);
+    }
+  };
   const loadEbook = async () => {
     try {
       const {
@@ -160,7 +174,9 @@ export default function Editor() {
         description: ebook.description,
         pages: chapters.length,
         cover_image: coverImageUrl,
-        author: ebook.author
+        author: ebook.author,
+        genre: ebook.genre,
+        price: ebook.price
       }).eq("id", ebook.id);
       if (ebookError) throw ebookError;
       const {
@@ -490,6 +506,63 @@ export default function Editor() {
                       author: e.target.value
                     })} placeholder="Nome do autor" />
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="genre-edit">Gênero</Label>
+                        <Select value={ebook.genre || ""} onValueChange={(value) => setEbook({
+                      ...ebook,
+                      genre: value
+                    })}>
+                          <SelectTrigger id="genre-edit">
+                            <SelectValue placeholder="Selecione um gênero" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {genres.map((genre) => (
+                              <SelectItem key={genre.id} value={genre.name}>
+                                {genre.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="price-type-edit">Tipo de Preço</Label>
+                        <Select value={ebook.price === 0 ? "free" : "paid"} onValueChange={(value) => {
+                      const isFree = value === "free";
+                      setEbook({
+                        ...ebook,
+                        price: isFree ? 0 : ebook.price || 100
+                      });
+                    }}>
+                          <SelectTrigger id="price-type-edit">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free">Grátis</SelectItem>
+                            <SelectItem value="paid">Pago</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {ebook.price > 0 && (
+                        <div className="space-y-2">
+                          <Label htmlFor="price-edit">Preço (MZN)</Label>
+                          <Input 
+                            id="price-edit" 
+                            type="number" 
+                            min="0" 
+                            step="0.01"
+                            placeholder="0.00" 
+                            value={ebook.price} 
+                            onChange={e => setEbook({
+                              ...ebook,
+                              price: parseFloat(e.target.value) || 0
+                            })} 
+                          />
+                        </div>
+                      )}
+
                       <div>
                         <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
                         {coverImagePreview ? <div className="relative">
