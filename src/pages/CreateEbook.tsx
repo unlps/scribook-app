@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, BookOpen, Upload, Sparkles, Type, Image, Minus, FileText, ArrowRight, Check, X } from "lucide-react";
@@ -35,6 +36,10 @@ const CreateEbook = () => {
   const [parsedChapters, setParsedChapters] = useState<ParsedChapter[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
+  const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState<string>("");
+  const [isFree, setIsFree] = useState<boolean>(true);
+  const [price, setPrice] = useState<string>("0");
   const navigate = useNavigate();
   const {
     toast
@@ -43,7 +48,15 @@ const CreateEbook = () => {
   useEffect(() => {
     checkUser();
     loadUserProfile();
+    fetchGenres();
   }, []);
+
+  const fetchGenres = async () => {
+    const { data } = await supabase.from("genres").select("*").order("name");
+    if (data) {
+      setGenres(data);
+    }
+  };
   const checkUser = async () => {
     const {
       data: {
@@ -148,9 +161,12 @@ const CreateEbook = () => {
         user_id: session.user.id,
         title,
         description,
+        author,
         type: "standard",
         template_id: selectedTemplate,
         cover_image: coverImageUrl,
+        genre: selectedGenre || null,
+        price: isFree ? 0 : parseFloat(price) || 0,
         pages: origin === "import" ? parsedChapters.length : 0
       }).select().single();
       if (error) throw error;
@@ -472,6 +488,53 @@ const CreateEbook = () => {
                   <Label htmlFor="description">Descrição</Label>
                   <Textarea id="description" placeholder="Descreva seu eBook..." value={description} onChange={e => setDescription(e.target.value)} rows={4} />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="genre">Gênero</Label>
+                  <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                    <SelectTrigger id="genre">
+                      <SelectValue placeholder="Selecione um gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {genres.map((genre) => (
+                        <SelectItem key={genre.id} value={genre.name}>
+                          {genre.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price-type">Tipo de Preço</Label>
+                  <Select value={isFree ? "free" : "paid"} onValueChange={(value) => {
+                    setIsFree(value === "free");
+                    if (value === "free") setPrice("0");
+                  }}>
+                    <SelectTrigger id="price-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Grátis</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {!isFree && (
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Preço (AOA)</Label>
+                    <Input 
+                      id="price" 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      placeholder="0.00" 
+                      value={price} 
+                      onChange={e => setPrice(e.target.value)} 
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="cover">Capa (opcional)</Label>

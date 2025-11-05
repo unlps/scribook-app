@@ -1,16 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import library1 from "@/assets/library-1.png";
 import library2 from "@/assets/library-2.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BookOpen, Star } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentImage, setCurrentImage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [showBookDialog, setShowBookDialog] = useState(false);
   
   const heroImages = [library1, library2];
 
@@ -53,6 +59,28 @@ const Index = () => {
     }, 5000);
     return () => clearInterval(imageTimer);
   }, [heroImages.length]);
+
+  useEffect(() => {
+    fetchFeaturedBooks();
+  }, []);
+
+  const fetchFeaturedBooks = async () => {
+    const { data } = await supabase
+      .from("ebooks")
+      .select("*")
+      .eq("is_public", true)
+      .order("rating", { ascending: false })
+      .limit(5);
+    
+    if (data) {
+      setFeaturedBooks(data);
+    }
+  };
+
+  const handleBookClick = (book: any) => {
+    setSelectedBook(book);
+    setShowBookDialog(true);
+  };
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -98,6 +126,34 @@ const Index = () => {
           ))}
         </div>
 
+        {/* Featured Books */}
+        {featuredBooks.length > 0 && (
+          <div className="w-full max-w-md mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-center">Livros em Destaque</h2>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {featuredBooks.map((book) => (
+                <div
+                  key={book.id}
+                  onClick={() => handleBookClick(book)}
+                  className="flex-shrink-0 w-32 cursor-pointer group"
+                >
+                  <div className="aspect-[2/3] bg-muted rounded-lg mb-2 overflow-hidden border-2 border-border group-hover:border-primary transition-colors">
+                    {book.cover_image ? (
+                      <img src={book.cover_image} alt={book.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate">{book.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{book.author}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="w-full max-w-md space-y-4">
           <Button 
@@ -131,6 +187,71 @@ const Index = () => {
           </Button>
         </div>
       </div>
+
+      {/* Book Details Dialog */}
+      <Dialog open={showBookDialog} onOpenChange={setShowBookDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedBook?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedBook?.cover_image && (
+              <div className="aspect-[2/3] w-full max-w-xs mx-auto rounded-lg overflow-hidden">
+                <img src={selectedBook.cover_image} alt={selectedBook.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              {selectedBook?.author && (
+                <p className="text-sm">
+                  <span className="font-semibold">Autor:</span> {selectedBook.author}
+                </p>
+              )}
+              
+              {selectedBook?.genre && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">Gênero:</span>
+                  <Badge variant="secondary">{selectedBook.genre}</Badge>
+                </div>
+              )}
+              
+              {selectedBook?.price !== undefined && (
+                <p className="text-sm">
+                  <span className="font-semibold">Preço:</span>{" "}
+                  {selectedBook.price > 0 ? `${selectedBook.price} AOA` : "Grátis"}
+                </p>
+              )}
+              
+              {selectedBook?.rating > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">Avaliação:</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm">{selectedBook.rating}</span>
+                  </div>
+                </div>
+              )}
+              
+              {selectedBook?.description && (
+                <div>
+                  <p className="text-sm font-semibold mb-1">Descrição:</p>
+                  <p className="text-sm text-muted-foreground">{selectedBook.description}</p>
+                </div>
+              )}
+            </div>
+
+            <Button 
+              onClick={() => {
+                setShowBookDialog(false);
+                navigate("/auth");
+              }}
+              className="w-full bg-[#fc5934] hover:bg-[#ff8568]"
+            >
+              Começar a Ler
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
