@@ -52,15 +52,27 @@ const Discover = () => {
   const [sortBy, setSortBy] = useState("recent");
   const [filterPrice, setFilterPrice] = useState("all");
   const [filterRating, setFilterRating] = useState("all");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGenres();
-    fetchBooks();
+    fetchCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId !== null) {
+      fetchBooks();
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     applyFilters();
   }, [books, selectedGenre, searchQuery, sortBy, filterPrice, filterRating]);
+
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchGenres = async () => {
     const { data } = await supabase.from("genres").select("*").order("name");
@@ -72,7 +84,7 @@ const Discover = () => {
     const { data } = await supabase
       .from("ebooks")
       .select("*")
-      .eq("is_public", true)
+      .or(`is_public.eq.true,user_id.eq.${currentUserId}`)
       .order("created_at", { ascending: false });
 
     if (data) {
@@ -132,6 +144,18 @@ const Discover = () => {
           return 0;
       }
     });
+
+    // Priorizar livros de outros usuários quando não há pesquisa
+    if (!searchQuery && currentUserId) {
+      filtered.sort((a, b) => {
+        const aIsOwn = a.user_id === currentUserId;
+        const bIsOwn = b.user_id === currentUserId;
+        
+        if (aIsOwn && !bIsOwn) return 1;
+        if (!aIsOwn && bIsOwn) return -1;
+        return 0;
+      });
+    }
 
     setFilteredBooks(filtered);
   };
