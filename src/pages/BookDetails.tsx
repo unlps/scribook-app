@@ -213,11 +213,11 @@ export default function BookDetails() {
         {/* Top Section - Cover and Info Side by Side */}
         <div className="grid md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] gap-8 mb-12">
           {/* Left - Book Cover */}
-          <div className="bg-muted flex items-center justify-center w-40 h-56 rounded-lg overflow-hidden">
+          <div className="bg-muted flex items-center justify-center w-44 h-72 rounded-lg overflow-hidden">
             {book.cover_image ? (
               <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full" />
             ) : (
-              <FileText className="h-16 w-16 text-muted-foreground" />
+              <FileText className="h-20 w-20 text-muted-foreground" />
             )}
           </div>
 
