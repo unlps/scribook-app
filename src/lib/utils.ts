@@ -12,3 +12,9 @@ export function sanitizeHtml(html: string): string {
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
   });
 }
+
+export function stripHtml(html: string): string {
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  return temp.textContent || temp.innerText || '';
+}

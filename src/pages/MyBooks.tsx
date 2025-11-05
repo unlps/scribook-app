@@ -11,7 +11,7 @@ import logoDark from "@/assets/logo-dark.png";
 import BottomNav from "@/components/BottomNav";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
-import { sanitizeHtml } from "@/lib/utils";
+import { stripHtml } from "@/lib/utils";
 
 interface Ebook {
   id: string;
@@ -250,14 +250,12 @@ const MyBooks = () => {
                     <BookOpen className="h-12 w-12 text-white" />
                   )}
                 </div>
-                <h4 
-                  className="font-semibold mb-1 text-sm line-clamp-1"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook.title) }}
-                />
-                <p 
-                  className="text-xs text-muted-foreground mb-2 line-clamp-1"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook.description || "Sem descrição") }}
-                />
+                <h4 className="font-semibold mb-1 text-sm line-clamp-1">
+                  {stripHtml(ebook.title)}
+                </h4>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
+                  {stripHtml(ebook.description || "Sem descrição")}
+                </p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Eye className="h-3 w-3" />
@@ -290,14 +288,12 @@ const MyBooks = () => {
             )}
             
             <div className="space-y-3">
-              <h2 
-                className="text-lg font-semibold leading-none tracking-tight"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedEbook?.title || "") }}
-              />
-              <p 
-                className="text-sm text-muted-foreground line-clamp-3"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedEbook?.description || "Sem descrição") }}
-              />
+              <h2 className="text-lg font-semibold leading-none tracking-tight">
+                {stripHtml(selectedEbook?.title || "")}
+              </h2>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {stripHtml(selectedEbook?.description || "Sem descrição")}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

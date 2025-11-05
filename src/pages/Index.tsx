@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BookOpen, Star } from "lucide-react";
+import { stripHtml } from "@/lib/utils";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -146,7 +147,7 @@ const Index = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-sm font-medium truncate">{book.title}</p>
+                  <p className="text-sm font-medium truncate">{stripHtml(book.title)}</p>
                   <p className="text-xs text-muted-foreground truncate">{book.author}</p>
                 </div>
               ))}
@@ -192,7 +193,7 @@ const Index = () => {
       <Dialog open={showBookDialog} onOpenChange={setShowBookDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{selectedBook?.title}</DialogTitle>
+            <DialogTitle>{stripHtml(selectedBook?.title || "")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {selectedBook?.cover_image && (

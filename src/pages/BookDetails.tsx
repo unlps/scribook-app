@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BookCard } from "@/components/BookCard";
 import BottomNav from "@/components/BottomNav";
+import { stripHtml } from "@/lib/utils";
 
 interface Ebook {
   id: string;
@@ -239,7 +240,7 @@ export default function BookDetails() {
           {/* Right - Book Info and Actions */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-bold mb-2">{book.title}</h1>
+              <h1 className="text-4xl font-bold mb-2">{stripHtml(book.title)}</h1>
               <p className="text-xl text-muted-foreground mb-4">{book.author}</p>
 
               <div className="flex flex-wrap gap-4 mb-6">

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { stripHtml } from "@/lib/utils";
 
 interface BookCardProps {
   id: string;
@@ -69,7 +70,7 @@ export const BookCard = ({
             )}
           </div>
           <div className="p-4">
-            <h3 className="font-semibold text-lg line-clamp-2 mb-1">{title}</h3>
+            <h3 className="font-semibold text-lg line-clamp-2 mb-1">{stripHtml(title)}</h3>
             <p className="text-sm text-muted-foreground mb-2">{author}</p>
             <div className="flex items-center justify-between">
               {genre && (
@@ -90,7 +91,7 @@ export const BookCard = ({
       <HoverCardContent className="w-80" side="right">
         <div className="space-y-3">
           <div>
-            <h4 className="font-bold text-lg mb-1">{title}</h4>
+            <h4 className="font-bold text-lg mb-1">{stripHtml(title)}</h4>
             <p className="text-sm text-muted-foreground">{author}</p>
           </div>
           
