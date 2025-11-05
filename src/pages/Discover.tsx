@@ -189,46 +189,68 @@ const Discover = () => {
         </div>
 
         {/* Filters and Sort */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Mais Recentes</SelectItem>
-              <SelectItem value="oldest">Mais Antigos</SelectItem>
-              <SelectItem value="alphabetical">A-Z</SelectItem>
-              <SelectItem value="alphabetical-reverse">Z-A</SelectItem>
-              <SelectItem value="popular">Mais Populares</SelectItem>
-              <SelectItem value="rating">Melhor Avaliados</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px]">
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Mais Recentes</SelectItem>
+                <SelectItem value="oldest">Mais Antigos</SelectItem>
+                <SelectItem value="alphabetical">A-Z</SelectItem>
+                <SelectItem value="alphabetical-reverse">Z-A</SelectItem>
+                <SelectItem value="popular">Mais Populares</SelectItem>
+                <SelectItem value="rating">Melhor Avaliados</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={filterPrice} onValueChange={setFilterPrice}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Preço" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="free">Grátis</SelectItem>
-              <SelectItem value="paid">Pagos</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={filterPrice} onValueChange={setFilterPrice}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Preço" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="free">Grátis</SelectItem>
+                <SelectItem value="paid">Pagos</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={filterRating} onValueChange={setFilterRating}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Avaliação" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Avaliação</SelectItem>
-              <SelectItem value="5">★★★★★ (5)</SelectItem>
-              <SelectItem value="4">★★★★☆ (4+)</SelectItem>
-              <SelectItem value="3">★★★☆☆ (3+)</SelectItem>
-              <SelectItem value="2">★★☆☆☆ (2+)</SelectItem>
-              <SelectItem value="1">★☆☆☆☆ (1+)</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={filterRating} onValueChange={setFilterRating}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Avaliação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Avaliação</SelectItem>
+                <SelectItem value="5">★★★★★ (5)</SelectItem>
+                <SelectItem value="4">★★★★☆ (4+)</SelectItem>
+                <SelectItem value="3">★★★☆☆ (3+)</SelectItem>
+                <SelectItem value="2">★★☆☆☆ (2+)</SelectItem>
+                <SelectItem value="1">★☆☆☆☆ (1+)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(selectedGenre !== "all" || searchQuery || filterPrice !== "all" || filterRating !== "all" || sortBy !== "recent") && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedGenre("all");
+                  setSearchQuery("");
+                  setSortBy("recent");
+                  setFilterPrice("all");
+                  setFilterRating("all");
+                }}
+              >
+                Limpar Filtros
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-medium">{filteredBooks.length}</span>
+            <span>{filteredBooks.length === 1 ? "livro encontrado" : "livros encontrados"}</span>
+          </div>
         </div>
 
         {/* Books Grid */}
