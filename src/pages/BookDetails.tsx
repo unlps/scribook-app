@@ -217,10 +217,11 @@ export default function BookDetails() {
           Voltar
         </Button>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Left Column - Book Cover */}
-          <div className="md:col-span-1">
-            <Card className="overflow-hidden sticky top-8">
+        {/* Top Section - Cover and Info Side by Side */}
+        <div className="grid md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] gap-8 mb-12">
+          {/* Left - Book Cover */}
+          <div>
+            <Card className="overflow-hidden">
               <div className="aspect-[3/4] bg-muted flex items-center justify-center">
                 {book.cover_image ? (
                   <img
@@ -232,28 +233,11 @@ export default function BookDetails() {
                   <FileText className="h-24 w-24 text-muted-foreground" />
                 )}
               </div>
-              <div className="p-4 space-y-3">
-                <Button
-                  className="w-full"
-                  size="lg"
-                >
-                  {book.price === 0 ? "Baixar Grátis" : `Comprar - ${book.price?.toFixed(2)} MT`}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={toggleWishlist}
-                >
-                  <Heart className={`h-4 w-4 mr-2 ${isInWishlist ? "fill-current" : ""}`} />
-                  {isInWishlist ? "Na Wishlist" : "Adicionar à Wishlist"}
-                </Button>
-              </div>
             </Card>
           </div>
 
-          {/* Right Column - Book Details */}
-          <div className="md:col-span-2 space-y-8">
-            {/* Book Info */}
+          {/* Right - Book Info and Actions */}
+          <div className="space-y-6">
             <div>
               <h1 className="text-4xl font-bold mb-2">{book.title}</h1>
               <p className="text-xl text-muted-foreground mb-4">{book.author}</p>
@@ -288,156 +272,176 @@ export default function BookDetails() {
                   <span className="text-sm">{book.formats.join(", ")}</span>
                 </div>
               )}
-
-              <Separator className="my-6" />
-
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Descrição</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {book.description || "Sem descrição disponível"}
-                </p>
-              </div>
             </div>
 
-            {/* Preview */}
-            {book.preview_content && (
-              <div>
-                <Separator className="my-6" />
-                <h2 className="text-2xl font-bold mb-4">Leitura de Amostra</h2>
-                <Card className="p-6 bg-muted/50">
-                  <p className="whitespace-pre-line">{book.preview_content}</p>
-                </Card>
-              </div>
-            )}
-
-            {/* About Author */}
-            <div>
-              <Separator className="my-6" />
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <User className="h-6 w-6" />
-                Sobre o Autor
-              </h2>
-              <p className="text-muted-foreground">{book.author}</p>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                className="flex-1"
+                size="lg"
+              >
+                {book.price === 0 ? "Baixar Grátis" : `Comprar - ${book.price?.toFixed(2)} MZN`}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                size="lg"
+                onClick={toggleWishlist}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isInWishlist ? "fill-current" : ""}`} />
+                {isInWishlist ? "Na Wishlist" : "Adicionar à Wishlist"}
+              </Button>
             </div>
+          </div>
+        </div>
 
-            {/* More from Author */}
-            {authorBooks.length > 0 && (
-              <div>
-                <Separator className="my-6" />
-                <h2 className="text-2xl font-bold mb-4">Mais do Autor</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {authorBooks.map((authorBook) => (
-                    <BookCard
-                      key={authorBook.id}
-                      id={authorBook.id}
-                      title={authorBook.title}
-                      author={authorBook.author || ""}
-                      coverImage={authorBook.cover_image}
-                      genre={authorBook.genre}
-                      price={authorBook.price}
-                      rating={authorBook.rating}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Bottom Section - Description and More */}
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Descrição</h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+              {book.description || "Sem descrição disponível"}
+            </p>
+          </div>
 
-            {/* Similar Books */}
-            {similarBooks.length > 0 && (
-              <div>
-                <Separator className="my-6" />
-                <h2 className="text-2xl font-bold mb-4">Livros Semelhantes</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {similarBooks.map((similarBook) => (
-                    <BookCard
-                      key={similarBook.id}
-                      id={similarBook.id}
-                      title={similarBook.title}
-                      author={similarBook.author || ""}
-                      coverImage={similarBook.cover_image}
-                      genre={similarBook.genre}
-                      price={similarBook.price}
-                      rating={similarBook.rating}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Reviews */}
+          {/* Preview */}
+          {book.preview_content && (
             <div>
               <Separator className="my-6" />
-              <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
+              <h2 className="text-2xl font-bold mb-4">Leitura de Amostra</h2>
+              <Card className="p-6 bg-muted/50">
+                <p className="whitespace-pre-line">{book.preview_content}</p>
+              </Card>
+            </div>
+          )}
 
-              {/* Add Review */}
-              {currentUser && (
-                <Card className="p-6 mb-6">
-                  <h3 className="font-semibold mb-4">Deixe sua avaliação</h3>
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => setNewReview({ ...newReview, rating: star })}
-                        >
-                          <Star
-                            className={`h-6 w-6 ${
-                              star <= newReview.rating
-                                ? "fill-yellow-500 text-yellow-500"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <Textarea
-                      placeholder="Escreva sua avaliação..."
-                      value={newReview.comment}
-                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
-                    />
-                    <Button onClick={submitReview}>Enviar Avaliação</Button>
+          {/* About Author */}
+          <div>
+            <Separator className="my-6" />
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <User className="h-6 w-6" />
+              Sobre o Autor
+            </h2>
+            <p className="text-muted-foreground">{book.author}</p>
+          </div>
+
+          {/* More from Author */}
+          {authorBooks.length > 0 && (
+            <div>
+              <Separator className="my-6" />
+              <h2 className="text-2xl font-bold mb-4">Mais do Autor</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {authorBooks.map((authorBook) => (
+                  <BookCard
+                    key={authorBook.id}
+                    id={authorBook.id}
+                    title={authorBook.title}
+                    author={authorBook.author || ""}
+                    coverImage={authorBook.cover_image}
+                    genre={authorBook.genre}
+                    price={authorBook.price}
+                    rating={authorBook.rating}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Similar Books */}
+          {similarBooks.length > 0 && (
+            <div>
+              <Separator className="my-6" />
+              <h2 className="text-2xl font-bold mb-4">Livros Semelhantes</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {similarBooks.map((similarBook) => (
+                  <BookCard
+                    key={similarBook.id}
+                    id={similarBook.id}
+                    title={similarBook.title}
+                    author={similarBook.author || ""}
+                    coverImage={similarBook.cover_image}
+                    genre={similarBook.genre}
+                    price={similarBook.price}
+                    rating={similarBook.rating}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Reviews */}
+          <div>
+            <Separator className="my-6" />
+            <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
+
+            {/* Add Review */}
+            {currentUser && (
+              <Card className="p-6 mb-6">
+                <h3 className="font-semibold mb-4">Deixe sua avaliação</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setNewReview({ ...newReview, rating: star })}
+                      >
+                        <Star
+                          className={`h-6 w-6 ${
+                            star <= newReview.rating
+                              ? "fill-yellow-500 text-yellow-500"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </button>
+                    ))}
                   </div>
-                </Card>
-              )}
+                  <Textarea
+                    placeholder="Escreva sua avaliação..."
+                    value={newReview.comment}
+                    onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                  />
+                  <Button onClick={submitReview}>Enviar Avaliação</Button>
+                </div>
+              </Card>
+            )}
 
-              {/* Reviews List */}
-              <div className="space-y-4">
-                {reviews.length === 0 ? (
-                  <p className="text-muted-foreground">Ainda não há avaliações</p>
-                ) : (
-                  reviews.map((review) => (
-                    <Card key={review.id} className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold">
-                              {review.profiles?.full_name || "Anônimo"}
-                            </span>
-                            <div className="flex">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`h-4 w-4 ${
-                                    star <= review.rating
-                                      ? "fill-yellow-500 text-yellow-500"
-                                      : "text-muted-foreground"
-                                  }`}
-                                />
-                              ))}
-                            </div>
+            {/* Reviews List */}
+            <div className="space-y-4">
+              {reviews.length === 0 ? (
+                <p className="text-muted-foreground">Ainda não há avaliações</p>
+              ) : (
+                reviews.map((review) => (
+                  <Card key={review.id} className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold">
+                            {review.profiles?.full_name || "Anônimo"}
+                          </span>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-4 w-4 ${
+                                  star <= review.rating
+                                    ? "fill-yellow-500 text-yellow-500"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            ))}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {format(new Date(review.created_at), "dd MMM yyyy", { locale: ptBR })}
-                          </p>
-                          {review.comment && (
-                            <p className="text-muted-foreground">{review.comment}</p>
-                          )}
                         </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {format(new Date(review.created_at), "dd MMM yyyy", { locale: ptBR })}
+                        </p>
+                        {review.comment && (
+                          <p className="text-muted-foreground">{review.comment}</p>
+                        )}
                       </div>
-                    </Card>
-                  ))
-                )}
-              </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>
