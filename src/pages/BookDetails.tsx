@@ -67,11 +67,7 @@ export default function BookDetails() {
 
   const fetchBookDetails = async () => {
     try {
-      const { data: bookData, error: bookError } = await supabase
-        .from("ebooks")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data: bookData, error: bookError } = await supabase.from("ebooks").select("*").eq("id", id).single();
 
       if (bookError) throw bookError;
       setBook(bookData);
@@ -79,7 +75,8 @@ export default function BookDetails() {
       // Fetch reviews
       const { data: reviewsData } = await supabase
         .from("reviews")
-        .select(`
+        .select(
+          `
           id,
           rating,
           comment,
@@ -88,11 +85,12 @@ export default function BookDetails() {
             full_name,
             avatar_url
           )
-        `)
+        `,
+        )
         .eq("ebook_id", id)
         .order("created_at", { ascending: false });
 
-      setReviews(reviewsData as any || []);
+      setReviews((reviewsData as any) || []);
 
       // Fetch similar books (same genre)
       if (bookData.genre) {
@@ -128,7 +126,9 @@ export default function BookDetails() {
   };
 
   const checkWishlistStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data } = await supabase
@@ -142,44 +142,40 @@ export default function BookDetails() {
   };
 
   const toggleWishlist = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para adicionar à wishlist");
       return;
     }
 
     if (isInWishlist) {
-      await supabase
-        .from("wishlist")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("ebook_id", id);
+      await supabase.from("wishlist").delete().eq("user_id", user.id).eq("ebook_id", id);
       setIsInWishlist(false);
       toast.success("Removido da wishlist");
     } else {
-      await supabase
-        .from("wishlist")
-        .insert({ user_id: user.id, ebook_id: id });
+      await supabase.from("wishlist").insert({ user_id: user.id, ebook_id: id });
       setIsInWishlist(true);
       toast.success("Adicionado à wishlist");
     }
   };
 
   const submitReview = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para deixar uma avaliação");
       return;
     }
 
-    const { error } = await supabase
-      .from("reviews")
-      .insert({
-        ebook_id: id,
-        user_id: user.id,
-        rating: newReview.rating,
-        comment: newReview.comment,
-      });
+    const { error } = await supabase.from("reviews").insert({
+      ebook_id: id,
+      user_id: user.id,
+      rating: newReview.rating,
+      comment: newReview.comment,
+    });
 
     if (error) {
       toast.error("Erro ao enviar avaliação");
@@ -209,11 +205,7 @@ export default function BookDetails() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
@@ -225,11 +217,7 @@ export default function BookDetails() {
             <Card className="overflow-hidden">
               <div className="aspect-[3/4] bg-muted flex items-center justify-center">
                 {book.cover_image ? (
-                  <img
-                    src={book.cover_image}
-                    alt={book.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={book.cover_image} alt={book.title} className="object-contain w-3/4 h-3/4" />
                 ) : (
                   <FileText className="h-24 w-24 text-muted-foreground" />
                 )}
@@ -277,18 +265,10 @@ export default function BookDetails() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                className="flex-1"
-                size="lg"
-              >
+              <Button className="flex-1" size="lg">
                 {book.price === 0 ? "Baixar Grátis" : `Comprar - ${book.price?.toFixed(2)} MZN`}
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                size="lg"
-                onClick={toggleWishlist}
-              >
+              <Button variant="outline" className="flex-1" size="lg" onClick={toggleWishlist}>
                 <Heart className={`h-4 w-4 mr-2 ${isInWishlist ? "fill-current" : ""}`} />
                 {isInWishlist ? "Na Wishlist" : "Adicionar à Wishlist"}
               </Button>
@@ -382,15 +362,10 @@ export default function BookDetails() {
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => setNewReview({ ...newReview, rating: star })}
-                      >
+                      <button key={star} onClick={() => setNewReview({ ...newReview, rating: star })}>
                         <Star
                           className={`h-6 w-6 ${
-                            star <= newReview.rating
-                              ? "fill-yellow-500 text-yellow-500"
-                              : "text-muted-foreground"
+                            star <= newReview.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"
                           }`}
                         />
                       </button>
@@ -416,17 +391,13 @@ export default function BookDetails() {
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">
-                            {review.profiles?.full_name || "Anônimo"}
-                          </span>
+                          <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
                                 className={`h-4 w-4 ${
-                                  star <= review.rating
-                                    ? "fill-yellow-500 text-yellow-500"
-                                    : "text-muted-foreground"
+                                  star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"
                                 }`}
                               />
                             ))}
@@ -435,9 +406,7 @@ export default function BookDetails() {
                         <p className="text-sm text-muted-foreground mb-2">
                           {format(new Date(review.created_at), "dd MMM yyyy", { locale: ptBR })}
                         </p>
-                        {review.comment && (
-                          <p className="text-muted-foreground">{review.comment}</p>
-                        )}
+                        {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
                       </div>
                     </div>
                   </Card>
