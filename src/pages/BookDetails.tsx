@@ -215,7 +215,7 @@ export default function BookDetails() {
           {/* Left - Book Cover */}
           <div>
             <Card className="overflow-hidden">
-              <div className="aspect-[3/4] bg-muted flex items-center justify-center">
+              <div className="aspect-[2/3] bg-muted flex items-center justify-center">
                 {book.cover_image ? (
                   <img src={book.cover_image} alt={book.title} className="object-contain w-3/4 h-3/4" />
                 ) : (
