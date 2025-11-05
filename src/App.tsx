@@ -13,6 +13,7 @@ import Discover from "./pages/Discover";
 import Notifications from "./pages/Notifications";
 import Account from "./pages/Account";
 import MyBooks from "./pages/MyBooks";
+import BookDetails from "./pages/BookDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/account" element={<Account />} />
             <Route path="/my-books" element={<MyBooks />} />
+            <Route path="/book/:id" element={<BookDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

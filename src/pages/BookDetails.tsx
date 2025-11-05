@@ -1,0 +1,449 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { BookCard } from "@/components/BookCard";
+import BottomNav from "@/components/BottomNav";
+
+interface Ebook {
+  id: string;
+  title: string;
+  description?: string;
+  author?: string;
+  cover_image?: string;
+  genre?: string;
+  price?: number;
+  pages?: number;
+  formats?: string[];
+  published_at?: string;
+  rating?: number;
+  downloads?: number;
+  preview_content?: string;
+  user_id: string;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  profiles: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
+export default function BookDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [book, setBook] = useState<Ebook | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [similarBooks, setSimilarBooks] = useState<Ebook[]>([]);
+  const [authorBooks, setAuthorBooks] = useState<Ebook[]>([]);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchBookDetails();
+    checkWishlistStatus();
+    fetchCurrentUser();
+  }, [id]);
+
+  const fetchCurrentUser = async () => {
+    const { data } = await supabase.auth.getUser();
+    setCurrentUser(data.user?.id || null);
+  };
+
+  const fetchBookDetails = async () => {
+    try {
+      const { data: bookData, error: bookError } = await supabase
+        .from("ebooks")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (bookError) throw bookError;
+      setBook(bookData);
+
+      // Fetch reviews
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          profiles!reviews_user_id_fkey (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq("ebook_id", id)
+        .order("created_at", { ascending: false });
+
+      setReviews(reviewsData as any || []);
+
+      // Fetch similar books (same genre)
+      if (bookData.genre) {
+        const { data: similarData } = await supabase
+          .from("ebooks")
+          .select("*")
+          .eq("genre", bookData.genre)
+          .eq("is_public", true)
+          .neq("id", id)
+          .limit(4);
+
+        setSimilarBooks(similarData || []);
+      }
+
+      // Fetch author's other books
+      if (bookData.user_id) {
+        const { data: authorData } = await supabase
+          .from("ebooks")
+          .select("*")
+          .eq("user_id", bookData.user_id)
+          .eq("is_public", true)
+          .neq("id", id)
+          .limit(4);
+
+        setAuthorBooks(authorData || []);
+      }
+    } catch (error) {
+      console.error("Error fetching book:", error);
+      toast.error("Erro ao carregar detalhes do livro");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkWishlistStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("wishlist")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("ebook_id", id)
+      .maybeSingle();
+
+    setIsInWishlist(!!data);
+  };
+
+  const toggleWishlist = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Faça login para adicionar à wishlist");
+      return;
+    }
+
+    if (isInWishlist) {
+      await supabase
+        .from("wishlist")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("ebook_id", id);
+      setIsInWishlist(false);
+      toast.success("Removido da wishlist");
+    } else {
+      await supabase
+        .from("wishlist")
+        .insert({ user_id: user.id, ebook_id: id });
+      setIsInWishlist(true);
+      toast.success("Adicionado à wishlist");
+    }
+  };
+
+  const submitReview = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Faça login para deixar uma avaliação");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("reviews")
+      .insert({
+        ebook_id: id,
+        user_id: user.id,
+        rating: newReview.rating,
+        comment: newReview.comment,
+      });
+
+    if (error) {
+      toast.error("Erro ao enviar avaliação");
+    } else {
+      toast.success("Avaliação enviada!");
+      setNewReview({ rating: 5, comment: "" });
+      fetchBookDetails();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!book) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Livro não encontrado</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Left Column - Book Cover */}
+          <div className="md:col-span-1">
+            <Card className="overflow-hidden sticky top-8">
+              <div className="aspect-[3/4] bg-muted flex items-center justify-center">
+                {book.cover_image ? (
+                  <img
+                    src={book.cover_image}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FileText className="h-24 w-24 text-muted-foreground" />
+                )}
+              </div>
+              <div className="p-4 space-y-3">
+                <Button
+                  className="w-full"
+                  size="lg"
+                >
+                  {book.price === 0 ? "Baixar Grátis" : `Comprar - ${book.price?.toFixed(2)} MT`}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={toggleWishlist}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${isInWishlist ? "fill-current" : ""}`} />
+                  {isInWishlist ? "Na Wishlist" : "Adicionar à Wishlist"}
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column - Book Details */}
+          <div className="md:col-span-2 space-y-8">
+            {/* Book Info */}
+            <div>
+              <h1 className="text-4xl font-bold mb-2">{book.title}</h1>
+              <p className="text-xl text-muted-foreground mb-4">{book.author}</p>
+
+              <div className="flex flex-wrap gap-4 mb-6">
+                {book.genre && <Badge variant="secondary">{book.genre}</Badge>}
+                {book.rating && book.rating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                    <span className="font-medium">{book.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Download className="h-4 w-4" />
+                  <span>{book.downloads} downloads</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span>{book.pages} páginas</span>
+                </div>
+                {book.published_at && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>{format(new Date(book.published_at), "dd MMM yyyy", { locale: ptBR })}</span>
+                  </div>
+                )}
+              </div>
+
+              {book.formats && book.formats.length > 0 && (
+                <div className="mb-6">
+                  <span className="text-sm font-medium">Formatos disponíveis: </span>
+                  <span className="text-sm">{book.formats.join(", ")}</span>
+                </div>
+              )}
+
+              <Separator className="my-6" />
+
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Descrição</h2>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {book.description || "Sem descrição disponível"}
+                </p>
+              </div>
+            </div>
+
+            {/* Preview */}
+            {book.preview_content && (
+              <div>
+                <Separator className="my-6" />
+                <h2 className="text-2xl font-bold mb-4">Leitura de Amostra</h2>
+                <Card className="p-6 bg-muted/50">
+                  <p className="whitespace-pre-line">{book.preview_content}</p>
+                </Card>
+              </div>
+            )}
+
+            {/* About Author */}
+            <div>
+              <Separator className="my-6" />
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <User className="h-6 w-6" />
+                Sobre o Autor
+              </h2>
+              <p className="text-muted-foreground">{book.author}</p>
+            </div>
+
+            {/* More from Author */}
+            {authorBooks.length > 0 && (
+              <div>
+                <Separator className="my-6" />
+                <h2 className="text-2xl font-bold mb-4">Mais do Autor</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {authorBooks.map((authorBook) => (
+                    <BookCard
+                      key={authorBook.id}
+                      id={authorBook.id}
+                      title={authorBook.title}
+                      author={authorBook.author || ""}
+                      coverImage={authorBook.cover_image}
+                      genre={authorBook.genre}
+                      price={authorBook.price}
+                      rating={authorBook.rating}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Similar Books */}
+            {similarBooks.length > 0 && (
+              <div>
+                <Separator className="my-6" />
+                <h2 className="text-2xl font-bold mb-4">Livros Semelhantes</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {similarBooks.map((similarBook) => (
+                    <BookCard
+                      key={similarBook.id}
+                      id={similarBook.id}
+                      title={similarBook.title}
+                      author={similarBook.author || ""}
+                      coverImage={similarBook.cover_image}
+                      genre={similarBook.genre}
+                      price={similarBook.price}
+                      rating={similarBook.rating}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reviews */}
+            <div>
+              <Separator className="my-6" />
+              <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
+
+              {/* Add Review */}
+              {currentUser && (
+                <Card className="p-6 mb-6">
+                  <h3 className="font-semibold mb-4">Deixe sua avaliação</h3>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setNewReview({ ...newReview, rating: star })}
+                        >
+                          <Star
+                            className={`h-6 w-6 ${
+                              star <= newReview.rating
+                                ? "fill-yellow-500 text-yellow-500"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <Textarea
+                      placeholder="Escreva seu comentário..."
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                    />
+                    <Button onClick={submitReview}>Enviar Avaliação</Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground">Ainda não há avaliações</p>
+                ) : (
+                  reviews.map((review) => (
+                    <Card key={review.id} className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold">
+                              {review.profiles?.full_name || "Anônimo"}
+                            </span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${
+                                    star <= review.rating
+                                      ? "fill-yellow-500 text-yellow-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {format(new Date(review.created_at), "dd MMM yyyy", { locale: ptBR })}
+                          </p>
+                          {review.comment && (
+                            <p className="text-muted-foreground">{review.comment}</p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}

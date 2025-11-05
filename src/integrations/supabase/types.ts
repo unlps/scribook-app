@@ -60,8 +60,15 @@ export type Database = {
           description: string | null
           downloads: number | null
           file_size: string | null
+          formats: string[] | null
+          genre: string | null
           id: string
+          is_public: boolean | null
           pages: number | null
+          preview_content: string | null
+          price: number | null
+          published_at: string | null
+          rating: number | null
           template_id: string | null
           title: string
           type: Database["public"]["Enums"]["ebook_type"]
@@ -76,8 +83,15 @@ export type Database = {
           description?: string | null
           downloads?: number | null
           file_size?: string | null
+          formats?: string[] | null
+          genre?: string | null
           id?: string
+          is_public?: boolean | null
           pages?: number | null
+          preview_content?: string | null
+          price?: number | null
+          published_at?: string | null
+          rating?: number | null
           template_id?: string | null
           title: string
           type: Database["public"]["Enums"]["ebook_type"]
@@ -92,14 +106,39 @@ export type Database = {
           description?: string | null
           downloads?: number | null
           file_size?: string | null
+          formats?: string[] | null
+          genre?: string | null
           id?: string
+          is_public?: boolean | null
           pages?: number | null
+          preview_content?: string | null
+          price?: number | null
+          published_at?: string | null
+          rating?: number | null
           template_id?: string | null
           title?: string
           type?: Database["public"]["Enums"]["ebook_type"]
           updated_at?: string
           user_id?: string
           views?: number | null
+        }
+        Relationships: []
+      }
+      genres: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -126,6 +165,44 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          ebook_id: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          ebook_id: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          ebook_id?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_ebook_id_fkey"
+            columns: ["ebook_id"]
+            isOneToOne: false
+            referencedRelation: "ebooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       templates: {
         Row: {
@@ -159,6 +236,35 @@ export type Database = {
           type?: Database["public"]["Enums"]["ebook_type"]
         }
         Relationships: []
+      }
+      wishlist: {
+        Row: {
+          created_at: string
+          ebook_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ebook_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ebook_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_ebook_id_fkey"
+            columns: ["ebook_id"]
+            isOneToOne: false
+            referencedRelation: "ebooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
