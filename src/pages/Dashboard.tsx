@@ -28,6 +28,8 @@ interface Ebook {
   cover_image: string;
   created_at: string;
   author: string | null;
+  genre: string | null;
+  price: number;
 }
 interface Template {
   id: string;
@@ -485,6 +487,22 @@ const Dashboard = () => {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Páginas</p>
                 <p className="font-medium">{selectedEbook?.pages || 0}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Gênero</p>
+                <p className="font-medium">{selectedEbook?.genre || 'Não definido'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Preço</p>
+                <p className="font-medium">
+                  {selectedEbook?.price && selectedEbook.price > 0 
+                    ? `${selectedEbook.price} MZN` 
+                    : 'Grátis'
+                  }
+                </p>
               </div>
             </div>
 
