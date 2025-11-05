@@ -391,7 +391,7 @@ export default function BookDetails() {
                       ))}
                     </div>
                     <Textarea
-                      placeholder="Escreva seu comentário..."
+                      placeholder="Escreva sua avaliação..."
                       value={newReview.comment}
                       onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
                     />
