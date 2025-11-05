@@ -221,7 +221,7 @@ const Discover = () => {
               <SelectValue placeholder="Avaliação" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">Avaliação</SelectItem>
               <SelectItem value="5">★★★★★ (5)</SelectItem>
               <SelectItem value="4">★★★★☆ (4+)</SelectItem>
               <SelectItem value="3">★★★☆☆ (3+)</SelectItem>
