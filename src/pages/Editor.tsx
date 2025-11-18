@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import RichTextEditor from "@/components/RichTextEditor";
+import SharedRichTextToolbar from "@/components/SharedRichTextToolbar";
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { sanitizeHtml } from "@/lib/utils";
@@ -45,6 +46,7 @@ export default function Editor() {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
+  const [activeEditor, setActiveEditor] = useState<any>(null);
   
   useEffect(() => {
     if (!ebookId) {
@@ -485,19 +487,36 @@ export default function Editor() {
                       <CardTitle>Informações do Ebook</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      {/* Shared Toolbar */}
+                      <SharedRichTextToolbar editor={activeEditor} />
+                      
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <RichTextEditor content={ebook.title} onChange={content => setEbook({
-                      ...ebook,
-                      title: content
-                    })} placeholder="Título do ebook" className="min-h-[100px]" />
+                        <RichTextEditor 
+                          content={ebook.title} 
+                          onChange={content => setEbook({
+                            ...ebook,
+                            title: content
+                          })} 
+                          placeholder="Título do ebook" 
+                          className="min-h-[100px]"
+                          hideToolbar={true}
+                          onEditorReady={(editor) => setActiveEditor(editor)}
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <RichTextEditor content={ebook.description || ""} onChange={content => setEbook({
-                      ...ebook,
-                      description: content
-                    })} placeholder="Descrição do ebook" className="min-h-[200px]" />
+                        <RichTextEditor 
+                          content={ebook.description || ""} 
+                          onChange={content => setEbook({
+                            ...ebook,
+                            description: content
+                          })} 
+                          placeholder="Descrição do ebook" 
+                          className="min-h-[200px]"
+                          hideToolbar={true}
+                          onEditorReady={(editor) => setActiveEditor(editor)}
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Autor</label>
