@@ -59,8 +59,7 @@ export default function RichTextEditor({
   return (
     <div className={`border rounded-lg ${className}`}>
       {/* Toolbar */}
-      <div className="border-b bg-muted/30 p-2 flex flex-wrap gap-1">
-        {/* Text Formatting */}
+      <div className="border-b bg-muted/30 p-2 flex flex-wrap gap-1 items-center">
         <Button
           type="button"
           variant={editor.isActive('bold') ? 'default' : 'ghost'}
@@ -97,10 +96,6 @@ export default function RichTextEditor({
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        {/* Headings */}
         <Button
           type="button"
           variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
@@ -128,10 +123,6 @@ export default function RichTextEditor({
         >
           <Heading3 className="h-4 w-4" />
         </Button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        {/* Alignment */}
         <Button
           type="button"
           variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
@@ -168,10 +159,6 @@ export default function RichTextEditor({
         >
           <AlignJustify className="h-4 w-4" />
         </Button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        {/* Lists */}
         <Button
           type="button"
           variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
@@ -190,10 +177,6 @@ export default function RichTextEditor({
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        {/* Clear Formatting */}
         <Button
           type="button"
           variant="ghost"
