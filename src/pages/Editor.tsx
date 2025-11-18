@@ -713,7 +713,7 @@ export default function Editor() {
                 <CardTitle>Visualização do Ebook</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg">
+                <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg ck-content">
                   {/* Cover */}
                   {coverImagePreview && <div className="text-center pb-12 border-b">
                       <div className="flex justify-center">
@@ -723,7 +723,7 @@ export default function Editor() {
 
                   {/* Title Page */}
                   <div className="text-center space-y-6 pb-12 border-b">
-                    <div className="text-4xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
+                    <div className="ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(ebook.title)
                   }} />
                     {ebook.author && <p className="text-xl text-gray-700 dark:text-gray-300">
@@ -733,17 +733,17 @@ export default function Editor() {
 
                   {/* Description Page */}
                   {ebook.description && <div className="pb-12 border-b">
-                      <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
+                      <div className="ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(ebook.description)
                   }} />
                     </div>}
 
                   {/* Chapters */}
                   {chapters.map((chapter, index) => <div key={index} className="space-y-6">
-                      <div className="text-3xl font-bold text-gray-900 dark:text-white prose prose-lg dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
+                      <div className="ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(chapter.title)
                   }} />
-                      <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{
+                      <div className="ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(chapter.content)
                   }} />
                       {index < chapters.length - 1 && <div className="border-t my-8"></div>}
