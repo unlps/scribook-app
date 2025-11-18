@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import CKEditorComponent from "@/components/CKEditorComponent";
 import { saveAs } from 'file-saver';
-import HTMLtoDOCX from 'html-to-docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { sanitizeHtml } from "@/lib/utils";
@@ -396,55 +396,79 @@ export default function Editor() {
         return temp.textContent || temp.innerText || '';
       };
 
-      // Build the HTML content for the DOCX
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body { font-family: Arial, sans-serif; }
-            h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-            h2 { font-size: 18px; font-weight: bold; margin-top: 30px; margin-bottom: 10px; }
-            p { margin-bottom: 10px; }
-          </style>
-        </head>
-        <body>
-      `;
+      const docSections: Paragraph[] = [];
 
       // Add title
-      htmlContent += `<h1>${ebook.title}</h1>`;
-      
+      docSections.push(
+        new Paragraph({
+          text: htmlToText(ebook.title),
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
+
       // Add author
       if (ebook.author) {
-        htmlContent += `<p><strong>Escrito por ${ebook.author}</strong></p>`;
+        docSections.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Escrito por ${ebook.author}`,
+                bold: true
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 }
+          })
+        );
       }
 
       // Add description
       if (ebook.description) {
-        htmlContent += `<div>${ebook.description}</div><br/>`;
+        docSections.push(
+          new Paragraph({
+            text: htmlToText(ebook.description),
+            spacing: { after: 400 }
+          })
+        );
       }
 
       // Add chapters
       chapters.forEach((chapter) => {
-        htmlContent += `<h2>${chapter.title}</h2>`;
-        htmlContent += `<div>${chapter.content}</div>`;
+        docSections.push(
+          new Paragraph({
+            text: htmlToText(chapter.title),
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 }
+          })
+        );
+        
+        // Split content by paragraphs
+        const contentText = htmlToText(chapter.content);
+        const paragraphs = contentText.split('\n').filter(p => p.trim());
+        
+        paragraphs.forEach(para => {
+          docSections.push(
+            new Paragraph({
+              text: para,
+              spacing: { after: 200 }
+            })
+          );
+        });
       });
 
-      htmlContent += `
-        </body>
-        </html>
-      `;
-
-      // Convert to DOCX
-      const docxBlob = await HTMLtoDOCX(htmlContent, null, {
-        table: { row: { cantSplit: true } },
-        footer: true,
-        pageNumber: true,
+      // Create document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: docSections
+        }]
       });
 
-      // Download
-      saveAs(docxBlob, `${htmlToText(ebook.title)}.docx`);
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${htmlToText(ebook.title)}.docx`);
       
       toast({
         title: "DOCX gerado!",
