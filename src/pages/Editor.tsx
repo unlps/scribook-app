@@ -723,7 +723,7 @@ export default function Editor() {
 
                   {/* Title Page */}
                   <div className="text-center space-y-6 pb-12 border-b">
-                    <div className="ck-content" dangerouslySetInnerHTML={{
+                    <div className="text-4xl font-bold text-gray-900 dark:text-white ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(ebook.title)
                   }} />
                     {ebook.author && <p className="text-xl text-gray-700 dark:text-gray-300">
@@ -733,17 +733,17 @@ export default function Editor() {
 
                   {/* Description Page */}
                   {ebook.description && <div className="pb-12 border-b">
-                      <div className="ck-content" dangerouslySetInnerHTML={{
+                      <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(ebook.description)
                   }} />
                     </div>}
 
                   {/* Chapters */}
                   {chapters.map((chapter, index) => <div key={index} className="space-y-6">
-                      <div className="ck-content" dangerouslySetInnerHTML={{
+                      <div className="text-3xl font-bold text-gray-900 dark:text-white ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(chapter.title)
                   }} />
-                      <div className="ck-content" dangerouslySetInnerHTML={{
+                      <div className="text-gray-700 dark:text-gray-300 leading-relaxed ck-content" dangerouslySetInnerHTML={{
                     __html: sanitizeHtml(chapter.content)
                   }} />
                       {index < chapters.length - 1 && <div className="border-t my-8"></div>}
