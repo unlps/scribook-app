@@ -92,6 +92,68 @@ All colors MUST be HSL.
   }
 }
 
+/* CKEditor Custom Styles */
+.ckeditor-container {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+  background: hsl(var(--background));
+}
+
+.ckeditor-container .ck-editor {
+  width: 100%;
+}
+
+.ckeditor-container .ck-editor__main {
+  min-height: 400px;
+}
+
+.ckeditor-container .ck-editor__editable {
+  min-height: 400px;
+  padding: 1rem;
+  font-size: 14px;
+  line-height: 1.6;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.ckeditor-container .ck-editor__editable:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.ckeditor-container .ck-toolbar {
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px;
+}
+
+.ckeditor-container .ck-button {
+  background: transparent;
+  color: hsl(var(--foreground));
+}
+
+.ckeditor-container .ck-button:hover {
+  background: hsl(var(--accent));
+}
+
+.ckeditor-container .ck-button.ck-on {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ckeditor-container .ck-toolbar {
+    flex-wrap: wrap;
+  }
+  
+  .ckeditor-container .ck-editor__editable {
+    min-height: 300px;
+    font-size: 13px;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
