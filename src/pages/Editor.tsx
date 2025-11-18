@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import RichTextEditor from "@/components/RichTextEditor";
-import SharedRichTextToolbar from "@/components/SharedRichTextToolbar";
-import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
+import CKEditorComponent from "@/components/CKEditorComponent";
+import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X, FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import { sanitizeHtml } from "@/lib/utils";
 import { ebookSchema, chapterSchema } from "@/lib/validations";
+import HTMLtoDOCX from "html-to-docx";
+import { saveAs } from "file-saver";
 interface Chapter {
   id?: string;
   title: string;
@@ -46,7 +47,6 @@ export default function Editor() {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
-  const [activeEditor, setActiveEditor] = useState<any>(null);
   
   useEffect(() => {
     if (!ebookId) {
@@ -385,6 +385,73 @@ export default function Editor() {
       });
     }
   };
+
+  const handleDownloadDOCX = async () => {
+    if (!ebook) return;
+    
+    try {
+      // Build complete HTML document
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; }
+              h1 { font-size: 24pt; margin-bottom: 20px; }
+              h2 { font-size: 18pt; margin-top: 30px; margin-bottom: 15px; }
+              p { font-size: 12pt; line-height: 1.6; }
+              .author { font-style: italic; margin-bottom: 30px; }
+              .description { margin-bottom: 40px; }
+            </style>
+          </head>
+          <body>
+            <h1>${ebook.title}</h1>
+      `;
+      
+      if (ebook.author) {
+        htmlContent += `<p class="author">Por ${ebook.author}</p>`;
+      }
+      
+      if (ebook.description) {
+        htmlContent += `<div class="description">${ebook.description}</div>`;
+      }
+      
+      // Add chapters
+      chapters.forEach((chapter) => {
+        htmlContent += `
+          <h2>${chapter.title}</h2>
+          <div>${chapter.content}</div>
+        `;
+      });
+      
+      htmlContent += `
+          </body>
+        </html>
+      `;
+      
+      // Convert HTML to DOCX
+      const docxBlob = await HTMLtoDOCX(htmlContent, null, {
+        table: { row: { cantSplit: true } },
+        footer: true,
+        pageNumber: true,
+      });
+      
+      // Save the file
+      saveAs(docxBlob as Blob, `${htmlToText(ebook.title)}.docx`);
+      
+      toast({
+        title: "DOCX gerado!",
+        description: "O download foi iniciado."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao gerar DOCX",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -420,7 +487,11 @@ export default function Editor() {
               </Button>
               <Button size="sm" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                Exportar PDF
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleDownloadDOCX}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Exportar DOCX
               </Button>
             </div>
           </div>
@@ -487,35 +558,28 @@ export default function Editor() {
                       <CardTitle>Informações do Ebook</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Shared Toolbar */}
-                      <SharedRichTextToolbar editor={activeEditor} />
-                      
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <RichTextEditor 
+                        <CKEditorComponent
                           content={ebook.title} 
                           onChange={content => setEbook({
                             ...ebook,
                             title: content
                           })} 
                           placeholder="Título do ebook" 
-                          className="min-h-[100px]"
-                          hideToolbar={true}
-                          onEditorReady={(editor) => setActiveEditor(editor)}
+                          minHeight="100px"
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <RichTextEditor 
+                        <CKEditorComponent
                           content={ebook.description || ""} 
                           onChange={content => setEbook({
                             ...ebook,
                             description: content
                           })} 
                           placeholder="Descrição do ebook" 
-                          className="min-h-[200px]"
-                          hideToolbar={true}
-                          onEditorReady={(editor) => setActiveEditor(editor)}
+                          minHeight="200px"
                         />
                       </div>
                       <div>
@@ -612,13 +676,23 @@ export default function Editor() {
                         <label className="text-sm font-medium mb-2 block">
                           Título do Capítulo
                         </label>
-                        <RichTextEditor content={selectedChapter.title} onChange={content => updateChapter(selectedChapterId, "title", content)} placeholder="Título do capítulo" className="min-h-[100px]" />
+                        <CKEditorComponent
+                          content={selectedChapter.title} 
+                          onChange={content => updateChapter(selectedChapterId, "title", content)} 
+                          placeholder="Título do capítulo" 
+                          minHeight="100px"
+                        />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">
                           Conteúdo
                         </label>
-                        <RichTextEditor content={selectedChapter.content} onChange={content => updateChapter(selectedChapterId, "content", content)} placeholder="Escreva o conteúdo do capítulo..." className="min-h-[400px]" />
+                        <CKEditorComponent
+                          content={selectedChapter.content} 
+                          onChange={content => updateChapter(selectedChapterId, "content", content)} 
+                          placeholder="Escreva o conteúdo do capítulo..." 
+                          minHeight="500px"
+                        />
                       </div>
                     </CardContent>
                   </Card>}
