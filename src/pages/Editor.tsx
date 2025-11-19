@@ -736,8 +736,65 @@ export default function Editor() {
               <CardHeader>
                 <CardTitle>Visualização do Ebook</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg ck-content">
+              <CardContent className="space-y-6">
+                {/* Editor for selected chapter or ebook info */}
+                {selectedChapterId === -1 ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Título</label>
+                      <CKEditorComponent 
+                        value={ebook.title} 
+                        onChange={content => setEbook({
+                          ...ebook,
+                          title: content
+                        })} 
+                        placeholder="Título do ebook" 
+                        minHeight="100px"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Descrição</label>
+                      <CKEditorComponent 
+                        value={ebook.description || ""} 
+                        onChange={content => setEbook({
+                          ...ebook,
+                          description: content
+                        })} 
+                        placeholder="Descrição do ebook" 
+                        minHeight="200px"
+                      />
+                    </div>
+                  </div>
+                ) : selectedChapter && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Título do Capítulo
+                      </label>
+                      <CKEditorComponent 
+                        value={selectedChapter.title} 
+                        onChange={content => updateChapter(selectedChapterId, "title", content)} 
+                        placeholder="Título do capítulo" 
+                        minHeight="100px"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Conteúdo
+                      </label>
+                      <CKEditorComponent 
+                        value={selectedChapter.content} 
+                        onChange={content => updateChapter(selectedChapterId, "content", content)} 
+                        placeholder="Escreva o conteúdo do capítulo..." 
+                        minHeight="400px"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Preview</h3>
+                  <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg ck-content">
                   {/* Cover */}
                   {coverImagePreview && <div className="text-center pb-12 border-b">
                       <div className="flex justify-center">
@@ -772,6 +829,7 @@ export default function Editor() {
                   }} />
                       {index < chapters.length - 1 && <div className="border-t my-8"></div>}
                     </div>)}
+                  </div>
                 </div>
               </CardContent>
             </Card>
