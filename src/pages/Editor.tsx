@@ -742,26 +742,33 @@ export default function Editor() {
                 </p>
               </div>
               
-              <SimplifiedCKEditor
-                value={`
-                  <h1 style="text-align: center; margin-bottom: 2rem;">${ebook?.title || ''}</h1>
-                  <p style="text-align: center; margin-bottom: 1rem;"><strong>Autor:</strong> ${ebook?.author || ''}</p>
-                  <div style="margin-bottom: 3rem; padding: 1rem; background: #f5f5f5; border-left: 4px solid #3B6AB8;">
-                    <p><strong>Descrição:</strong></p>
-                    <div>${ebook?.description || ''}</div>
+              <div className="a4-editor-wrapper">
+                {/* First Page - Book Info */}
+                <div className="a4-page">
+                  <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
+                      {sanitizeHtml(ebook?.title || '')}
+                    </h1>
+                    <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+                      <strong>Autor:</strong> {ebook?.author || ''}
+                    </p>
                   </div>
-                  ${chapters.map((chapter, index) => `
-                    <div class="chapter-page" style="page-break-before: always; ${index === 0 ? 'page-break-before: auto;' : ''}">
-                      <h2 style="margin-bottom: 2rem; color: #3B6AB8;">${chapter.title}</h2>
-                      <div>${chapter.content}</div>
-                    </div>
-                  `).join('')}
-                `}
-                onChange={(content) => {
-                  // For now, disable editing in preview mode to avoid complexity
-                  // Users should edit in the edit tab
-                }}
-              />
+                  <div style={{ padding: '1.5rem', background: '#f5f5f5', borderLeft: '4px solid #3B6AB8', marginBottom: '2rem' }}>
+                    <p style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Descrição:</p>
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook?.description || '') }} />
+                  </div>
+                </div>
+
+                {/* Chapter Pages */}
+                {chapters.map((chapter, index) => (
+                  <div key={index} className="a4-page">
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#3B6AB8' }}>
+                      {sanitizeHtml(chapter.title)}
+                    </h2>
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }} />
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
