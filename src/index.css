@@ -142,7 +142,7 @@ All colors MUST be HSL.
   color: hsl(var(--primary-foreground));
 }
 
-/* A4 Page Editor Styles - Separated Architecture */
+/* US Letter Page Editor Styles (8.5" x 11") - Separated Architecture */
 .a4-editor-wrapper {
   background: hsl(var(--muted) / 0.3);
   padding: 2rem;
@@ -150,12 +150,17 @@ All colors MUST be HSL.
 }
 
 .a4-page {
-  width: 210mm;
-  min-height: 297mm;
-  margin: 0 auto;
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 2rem auto;
   background: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  padding: 25mm 20mm;
+  padding: 1in;
+  page-break-after: always;
+}
+
+.a4-page:last-child {
+  margin-bottom: 0;
 }
 
 .a4-page .ck-editor {
@@ -167,7 +172,7 @@ All colors MUST be HSL.
 }
 
 .a4-page .ck-editor__editable {
-  min-height: 247mm;
+  min-height: 9in;
   background: white;
   color: #000;
   font-size: 12pt;
@@ -177,6 +182,19 @@ All colors MUST be HSL.
   box-shadow: none;
   padding: 0;
   outline: none !important;
+}
+
+/* Chapter page break styles */
+.chapter-page {
+  page-break-before: always;
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.chapter-page:first-of-type {
+  page-break-before: auto;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .a4-page .ck-editor__editable:focus {
