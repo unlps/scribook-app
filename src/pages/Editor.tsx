@@ -593,26 +593,26 @@ export default function Editor() {
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <CKEditorComponent 
-                          value={ebook.title} 
-                          onChange={content => setEbook({
+                        <Input
+                          value={ebook.title.replace(/<[^>]*>/g, '')}
+                          onChange={(e) => setEbook({
                             ...ebook,
-                            title: content
-                          })} 
-                          placeholder="Título do ebook" 
-                          minHeight="100px"
+                            title: e.target.value
+                          })}
+                          placeholder="Título do ebook"
+                          className="w-full"
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <CKEditorComponent 
-                          value={ebook.description || ""} 
-                          onChange={content => setEbook({
+                        <Textarea
+                          value={(ebook.description || "").replace(/<[^>]*>/g, '')}
+                          onChange={(e) => setEbook({
                             ...ebook,
-                            description: content
-                          })} 
-                          placeholder="Descrição do ebook" 
-                          minHeight="200px"
+                            description: e.target.value
+                          })}
+                          placeholder="Descrição do ebook"
+                          className="w-full min-h-[200px]"
                         />
                       </div>
                       <div>
