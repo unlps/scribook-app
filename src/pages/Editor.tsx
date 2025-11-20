@@ -742,29 +742,43 @@ export default function Editor() {
                 </p>
               </div>
               
-              <SimplifiedCKEditor
-                value={`
-                  <div style="text-align: center; margin-bottom: 3rem;">
-                    <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">${ebook?.title || ''}</h1>
-                    <p style="font-size: 1.2rem; margin-bottom: 1rem;"><strong>Autor:</strong> ${ebook?.author || ''}</p>
+              <div className="a4-editor-wrapper">
+                {/* Página 1: Título e Autor */}
+                <div className="a4-page">
+                  <div style={{ textAlign: 'center', paddingTop: '3in' }}>
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#3B6AB8' }}>
+                      {sanitizeHtml(ebook?.title || '')}
+                    </h1>
+                    <p style={{ fontSize: '1.5rem', marginTop: '2rem' }}>
+                      {ebook?.author || ''}
+                    </p>
                   </div>
-                  <div style="padding: 1.5rem; background: #f5f5f5; border-left: 4px solid #3B6AB8; margin-bottom: 3rem;">
-                    <p style="font-weight: bold; margin-bottom: 1rem;">Descrição:</p>
-                    <div>${ebook?.description || ''}</div>
+                </div>
+
+                {/* Página 2: Descrição */}
+                <div className="a4-page">
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '2rem', color: '#3B6AB8' }}>
+                    Descrição
+                  </h2>
+                  <div 
+                    style={{ fontSize: '12pt', lineHeight: '1.6' }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook?.description || '') }} 
+                  />
+                </div>
+
+                {/* Páginas dos Capítulos - cada capítulo em nova página */}
+                {chapters.map((chapter, index) => (
+                  <div key={chapter.id} className="a4-page">
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#3B6AB8' }}>
+                      {sanitizeHtml(chapter.title)}
+                    </h2>
+                    <div 
+                      style={{ fontSize: '12pt', lineHeight: '1.6' }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }} 
+                    />
                   </div>
-                  <div style="page-break-before: always; margin-top: 3rem;"></div>
-                  ${chapters.map((chapter, index) => `
-                    ${index > 0 ? '<div style="page-break-before: always; margin-top: 3rem;"></div>' : ''}
-                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 2rem; color: #3B6AB8;">${chapter.title}</h2>
-                    <div>${chapter.content}</div>
-                  `).join('')}
-                `}
-                onChange={(content) => {
-                  // Extract chapter content from the full document
-                  // This is a simplified approach - in production you'd want more robust parsing
-                  console.log('Content updated:', content);
-                }}
-              />
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
