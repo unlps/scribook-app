@@ -142,6 +142,45 @@ All colors MUST be HSL.
   color: hsl(var(--primary-foreground));
 }
 
+/* A4 Page Editor Styles */
+.a4-editor-wrapper {
+  background: hsl(var(--muted) / 0.3);
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  padding: 25mm 20mm;
+}
+
+.a4-page .ck-editor {
+  border: none;
+}
+
+.a4-page .ck-toolbar {
+  background: white;
+  border: none;
+  border-bottom: 2px solid hsl(var(--border));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 1rem;
+}
+
+.a4-page .ck-editor__editable {
+  min-height: 247mm;
+  background: white;
+  color: #000;
+  font-size: 12pt;
+  line-height: 1.5;
+  font-family: 'Times New Roman', Times, serif;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .ckeditor-container .ck-toolbar {
@@ -151,6 +190,21 @@ All colors MUST be HSL.
   .ckeditor-container .ck-editor__editable {
     min-height: 300px;
     font-size: 13px;
+  }
+  
+  .a4-editor-wrapper {
+    padding: 0.5rem;
+  }
+  
+  .a4-page {
+    width: 100%;
+    min-height: auto;
+    padding: 15mm 10mm;
+  }
+  
+  .a4-page .ck-editor__editable {
+    min-height: auto;
+    font-size: 11pt;
   }
 }
 
