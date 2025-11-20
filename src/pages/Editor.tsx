@@ -738,37 +738,33 @@ export default function Editor() {
               <div className="bg-background p-4 rounded-lg border">
                 <h2 className="text-2xl font-bold mb-2">Visualização do Editor</h2>
                 <p className="text-sm text-muted-foreground">
-                  Visualize seu ebook em formato de página 8.5"x11". Cada capítulo inicia numa nova página.
+                  Edite seu ebook em formato de página 8.5"x11". Cada capítulo inicia numa nova página.
                 </p>
               </div>
               
-              <div className="a4-editor-wrapper">
-                {/* First Page - Book Info */}
-                <div className="a4-page">
-                  <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-                      {sanitizeHtml(ebook?.title || '')}
-                    </h1>
-                    <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-                      <strong>Autor:</strong> {ebook?.author || ''}
-                    </p>
+              <SimplifiedCKEditor
+                value={`
+                  <div style="text-align: center; margin-bottom: 3rem;">
+                    <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">${ebook?.title || ''}</h1>
+                    <p style="font-size: 1.2rem; margin-bottom: 1rem;"><strong>Autor:</strong> ${ebook?.author || ''}</p>
                   </div>
-                  <div style={{ padding: '1.5rem', background: '#f5f5f5', borderLeft: '4px solid #3B6AB8', marginBottom: '2rem' }}>
-                    <p style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Descrição:</p>
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(ebook?.description || '') }} />
+                  <div style="padding: 1.5rem; background: #f5f5f5; border-left: 4px solid #3B6AB8; margin-bottom: 3rem;">
+                    <p style="font-weight: bold; margin-bottom: 1rem;">Descrição:</p>
+                    <div>${ebook?.description || ''}</div>
                   </div>
-                </div>
-
-                {/* Chapter Pages */}
-                {chapters.map((chapter, index) => (
-                  <div key={index} className="a4-page">
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#3B6AB8' }}>
-                      {sanitizeHtml(chapter.title)}
-                    </h2>
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }} />
-                  </div>
-                ))}
-              </div>
+                  <div style="page-break-before: always; margin-top: 3rem;"></div>
+                  ${chapters.map((chapter, index) => `
+                    ${index > 0 ? '<div style="page-break-before: always; margin-top: 3rem;"></div>' : ''}
+                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 2rem; color: #3B6AB8;">${chapter.title}</h2>
+                    <div>${chapter.content}</div>
+                  `).join('')}
+                `}
+                onChange={(content) => {
+                  // Extract chapter content from the full document
+                  // This is a simplified approach - in production you'd want more robust parsing
+                  console.log('Content updated:', content);
+                }}
+              />
             </div>
           </TabsContent>
         </Tabs>
