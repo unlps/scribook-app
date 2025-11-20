@@ -742,10 +742,25 @@ export default function Editor() {
               </div>
               
               <SimplifiedCKEditor
-                value={selectedChapter ? selectedChapter.content : chapters[0]?.content || ''}
+                value={`
+                  <h1 style="text-align: center; margin-bottom: 2rem;">${ebook?.title || ''}</h1>
+                  <p style="text-align: center; margin-bottom: 1rem;"><strong>Autor:</strong> ${ebook?.author || ''}</p>
+                  <div style="margin-bottom: 3rem; padding: 1rem; background: #f5f5f5; border-left: 4px solid #3B6AB8;">
+                    <p><strong>Descrição:</strong></p>
+                    <div>${ebook?.description || ''}</div>
+                  </div>
+                  <hr style="margin: 2rem 0;" />
+                  ${selectedChapter ? selectedChapter.content : chapters[0]?.content || ''}
+                `}
                 onChange={(content) => {
-                  const chapterIndex = selectedChapterId >= 0 ? selectedChapterId : 0;
-                  updateChapter(chapterIndex, "content", content);
+                  // Extract and update the chapter content (content after the hr separator)
+                  const hrIndex = content.lastIndexOf('<hr');
+                  if (hrIndex !== -1) {
+                    const endOfHr = content.indexOf('>', hrIndex) + 1;
+                    const chapterContent = content.substring(endOfHr).trim();
+                    const chapterIndex = selectedChapterId >= 0 ? selectedChapterId : 0;
+                    updateChapter(chapterIndex, "content", chapterContent);
+                  }
                 }}
               />
             </div>
