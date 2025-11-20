@@ -276,9 +276,12 @@ export default function BookDetails() {
         <div className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold mb-4">Descrição</h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-              {book.description || "Sem descrição disponível"}
-            </p>
+            <div 
+              className="text-muted-foreground leading-relaxed text-justify"
+              dangerouslySetInnerHTML={{ 
+                __html: book.description || "Sem descrição disponível" 
+              }}
+            />
           </div>
 
           {/* Preview */}
