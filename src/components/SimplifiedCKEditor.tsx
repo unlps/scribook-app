@@ -25,6 +25,7 @@ interface SimplifiedCKEditorProps {
 
 export default function SimplifiedCKEditor({ value, onChange }: SimplifiedCKEditorProps) {
   const editorConfiguration = {
+    licenseKey: 'GPL',
     plugins: [
       Essentials,
       Bold,
