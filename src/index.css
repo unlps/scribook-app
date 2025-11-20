@@ -142,7 +142,7 @@ All colors MUST be HSL.
   color: hsl(var(--primary-foreground));
 }
 
-/* A4 Page Editor Styles */
+/* A4 Page Editor Styles - Separated Architecture */
 .a4-editor-wrapper {
   background: hsl(var(--muted) / 0.3);
   padding: 2rem;
@@ -162,14 +162,8 @@ All colors MUST be HSL.
   border: none;
 }
 
-.a4-page .ck-toolbar {
-  background: white;
+.a4-page .ck-editor__main {
   border: none;
-  border-bottom: 2px solid hsl(var(--border));
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  margin-bottom: 1rem;
 }
 
 .a4-page .ck-editor__editable {
@@ -179,6 +173,9 @@ All colors MUST be HSL.
   font-size: 12pt;
   line-height: 1.5;
   font-family: 'Times New Roman', Times, serif;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 /* Responsive adjustments */

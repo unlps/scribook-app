@@ -1,6 +1,6 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import {
-  ClassicEditor,
+  DecoupledEditor,
   Bold,
   Essentials,
   Italic,
@@ -17,6 +17,7 @@ import {
   Base64UploadAdapter
 } from 'ckeditor5';
 import 'ckeditor5/ckeditor5.css';
+import { useRef, useEffect } from 'react';
 
 interface SimplifiedCKEditorProps {
   value: string;
@@ -24,6 +25,9 @@ interface SimplifiedCKEditorProps {
 }
 
 export default function SimplifiedCKEditor({ value, onChange }: SimplifiedCKEditorProps) {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<any>(null);
+
   const editorConfiguration = {
     licenseKey: 'GPL',
     plugins: [
@@ -89,17 +93,32 @@ export default function SimplifiedCKEditor({ value, onChange }: SimplifiedCKEdit
   };
 
   return (
-    <div className="a4-editor-wrapper">
-      <div className="a4-page">
-        <CKEditor
-          editor={ClassicEditor}
-          config={editorConfiguration}
-          data={value}
-          onChange={(event, editor) => {
-            const data = editor.getData();
-            onChange(data);
-          }}
-        />
+    <div className="flex flex-col h-full">
+      {/* Toolbar Section - Separated for independent modification */}
+      <div 
+        ref={toolbarRef} 
+        className="border-b border-border bg-background sticky top-0 z-10"
+      />
+      
+      {/* A4 Pages Section - Separated for independent modification */}
+      <div className="a4-editor-wrapper flex-1 overflow-auto">
+        <div className="a4-page">
+          <CKEditor
+            editor={DecoupledEditor}
+            config={editorConfiguration}
+            data={value}
+            onReady={(editor) => {
+              if (toolbarRef.current) {
+                toolbarRef.current.appendChild(editor.ui.view.toolbar.element!);
+              }
+              editorRef.current = editor;
+            }}
+            onChange={(event, editor) => {
+              const data = editor.getData();
+              onChange(data);
+            }}
+          />
+        </div>
       </div>
     </div>
   );
