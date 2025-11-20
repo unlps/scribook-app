@@ -178,6 +178,15 @@ All colors MUST be HSL.
   padding: 0;
 }
 
+/* Hide CKEditor branding */
+.ck-powered-by {
+  display: none !important;
+}
+
+.ck.ck-balloon-panel {
+  display: none !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .ckeditor-container .ck-toolbar {
