@@ -738,7 +738,7 @@ export default function Editor() {
               <div className="bg-background p-4 rounded-lg border">
                 <h2 className="text-2xl font-bold mb-2">Visualização do Editor</h2>
                 <p className="text-sm text-muted-foreground">
-                  Edite seu ebook em formato de página A4. As alterações são sincronizadas automaticamente.
+                  Visualize seu ebook em formato de página 8.5"x11". Cada capítulo inicia numa nova página.
                 </p>
               </div>
               
@@ -750,18 +750,16 @@ export default function Editor() {
                     <p><strong>Descrição:</strong></p>
                     <div>${ebook?.description || ''}</div>
                   </div>
-                  <hr style="margin: 2rem 0;" />
-                  ${selectedChapter ? selectedChapter.content : chapters[0]?.content || ''}
+                  ${chapters.map((chapter, index) => `
+                    <div class="chapter-page" style="page-break-before: always; ${index === 0 ? 'page-break-before: auto;' : ''}">
+                      <h2 style="margin-bottom: 2rem; color: #3B6AB8;">${chapter.title}</h2>
+                      <div>${chapter.content}</div>
+                    </div>
+                  `).join('')}
                 `}
                 onChange={(content) => {
-                  // Extract and update the chapter content (content after the hr separator)
-                  const hrIndex = content.lastIndexOf('<hr');
-                  if (hrIndex !== -1) {
-                    const endOfHr = content.indexOf('>', hrIndex) + 1;
-                    const chapterContent = content.substring(endOfHr).trim();
-                    const chapterIndex = selectedChapterId >= 0 ? selectedChapterId : 0;
-                    updateChapter(chapterIndex, "content", chapterContent);
-                  }
+                  // For now, disable editing in preview mode to avoid complexity
+                  // Users should edit in the edit tab
                 }}
               />
             </div>
