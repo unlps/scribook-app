@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import CKEditorComponent from "@/components/CKEditorComponent";
+import SimplifiedCKEditor from "@/components/SimplifiedCKEditor";
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { ArrowLeft, Save, Eye, Download, Plus, Trash2, FileText, Upload, X } from "lucide-react";
@@ -732,49 +733,22 @@ export default function Editor() {
           </TabsContent>
 
           <TabsContent value="preview" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Visualização do Ebook</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="max-w-4xl mx-auto space-y-12 p-8 bg-white dark:bg-gray-900 rounded-lg ck-content">
-                  {/* Cover */}
-                  {coverImagePreview && <div className="text-center pb-12 border-b">
-                      <div className="flex justify-center">
-                        <img src={coverImagePreview} alt={ebook.title} className="w-full max-w-md h-auto rounded-lg shadow-lg" />
-                      </div>
-                    </div>}
-
-                  {/* Title Page */}
-                  <div className="text-center space-y-6 pb-12 border-b">
-                    <div className="text-4xl font-bold text-gray-900 dark:text-white ck-content" dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(ebook.title)
-                  }} />
-                    {ebook.author && <p className="text-xl text-gray-700 dark:text-gray-300">
-                        Escrito por {ebook.author}
-                      </p>}
-                  </div>
-
-                  {/* Description Page */}
-                  {ebook.description && <div className="pb-12 border-b">
-                      <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed ck-content" dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(ebook.description)
-                  }} />
-                    </div>}
-
-                  {/* Chapters */}
-                  {chapters.map((chapter, index) => <div key={index} className="space-y-6">
-                      <div className="text-3xl font-bold text-gray-900 dark:text-white ck-content" dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(chapter.title)
-                  }} />
-                      <div className="text-gray-700 dark:text-gray-300 leading-relaxed ck-content" dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(chapter.content)
-                  }} />
-                      {index < chapters.length - 1 && <div className="border-t my-8"></div>}
-                    </div>)}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <div className="bg-background p-4 rounded-lg border">
+                <h2 className="text-2xl font-bold mb-2">Visualização do Editor</h2>
+                <p className="text-sm text-muted-foreground">
+                  Edite seu ebook em formato de página A4. As alterações são sincronizadas automaticamente.
+                </p>
+              </div>
+              
+              <SimplifiedCKEditor
+                value={selectedChapter ? selectedChapter.content : chapters[0]?.content || ''}
+                onChange={(content) => {
+                  const chapterIndex = selectedChapterId >= 0 ? selectedChapterId : 0;
+                  updateChapter(chapterIndex, "content", content);
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
