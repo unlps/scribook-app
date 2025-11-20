@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -708,22 +709,22 @@ export default function Editor() {
                         <label className="text-sm font-medium mb-2 block">
                           Título do Capítulo
                         </label>
-                        <CKEditorComponent 
-                          value={selectedChapter.title} 
-                          onChange={content => updateChapter(selectedChapterId, "title", content)} 
-                          placeholder="Título do capítulo" 
-                          minHeight="100px"
+                        <Input
+                          value={selectedChapter.title.replace(/<[^>]*>/g, '')}
+                          onChange={(e) => updateChapter(selectedChapterId, "title", e.target.value)}
+                          placeholder="Título do capítulo"
+                          className="w-full"
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">
                           Conteúdo
                         </label>
-                        <CKEditorComponent 
-                          value={selectedChapter.content} 
-                          onChange={content => updateChapter(selectedChapterId, "content", content)} 
-                          placeholder="Escreva o conteúdo do capítulo..." 
-                          minHeight="400px"
+                        <Textarea
+                          value={selectedChapter.content.replace(/<[^>]*>/g, '')}
+                          onChange={(e) => updateChapter(selectedChapterId, "content", e.target.value)}
+                          placeholder="Escreva o conteúdo do capítulo..."
+                          className="w-full min-h-[400px]"
                         />
                       </div>
                     </CardContent>
