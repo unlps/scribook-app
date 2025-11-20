@@ -48,8 +48,10 @@ export default function Editor() {
   const [activeTab, setActiveTab] = useState("edit");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
-  const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
-  
+  const [genres, setGenres] = useState<{
+    id: string;
+    name: string;
+  }[]>([]);
   useEffect(() => {
     if (!ebookId) {
       navigate("/dashboard");
@@ -58,9 +60,10 @@ export default function Editor() {
     loadEbook();
     fetchGenres();
   }, [ebookId]);
-
   const fetchGenres = async () => {
-    const { data } = await supabase.from("genres").select("*").order("name");
+    const {
+      data
+    } = await supabase.from("genres").select("*").order("name");
     if (data) {
       setGenres(data);
     }
@@ -119,7 +122,6 @@ export default function Editor() {
       description: ebook.description,
       author: ebook.author
     });
-
     if (!ebookValidation.success) {
       const firstError = ebookValidation.error.errors[0];
       toast({
@@ -143,7 +145,6 @@ export default function Editor() {
         return;
       }
     }
-
     setSaving(true);
     try {
       const {
@@ -254,7 +255,6 @@ export default function Editor() {
       });
       return;
     }
-
     const newChapters = [...chapters];
     newChapters[index][field] = value;
     setChapters(newChapters);
@@ -287,7 +287,6 @@ export default function Editor() {
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
       };
-      
       const pdf = new jsPDF();
       let yPosition = 20;
 
@@ -296,20 +295,18 @@ export default function Editor() {
         try {
           const img = new Image();
           img.src = coverImagePreview;
-          await new Promise<void>((resolve) => {
+          await new Promise<void>(resolve => {
             img.onload = () => resolve();
           });
-          
+
           // Get page dimensions
           const pageWidth = pdf.internal.pageSize.getWidth();
           const pageHeight = pdf.internal.pageSize.getHeight();
-          
+
           // Calculate dimensions to cover entire page
           const imgRatio = img.width / img.height;
           const pageRatio = pageWidth / pageHeight;
-          
           let finalWidth, finalHeight, xOffset, yOffset;
-          
           if (imgRatio > pageRatio) {
             // Image is wider - fit to height and crop width
             finalHeight = pageHeight;
@@ -323,7 +320,6 @@ export default function Editor() {
             xOffset = 0;
             yOffset = (pageHeight - finalHeight) / 2;
           }
-          
           pdf.addImage(img, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
         } catch (error) {
           console.error('Erro ao adicionar capa ao PDF:', error);
@@ -354,7 +350,7 @@ export default function Editor() {
       }
 
       // Chapters
-      chapters.forEach((chapter) => {
+      chapters.forEach(chapter => {
         pdf.addPage();
         yPosition = 20;
         pdf.setFontSize(18);
@@ -373,7 +369,6 @@ export default function Editor() {
           yPosition += 7;
         });
       });
-      
       pdf.save(`${htmlToText(ebook.title)}.pdf`);
       toast({
         title: "PDF gerado!",
@@ -387,76 +382,71 @@ export default function Editor() {
       });
     }
   };
-
   const handleDownloadDOCX = async () => {
     if (!ebook) return;
-    
     try {
       const htmlToText = (html: string): string => {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
       };
-
       const docSections: Paragraph[] = [];
 
       // Add title
-      docSections.push(
-        new Paragraph({
-          text: htmlToText(ebook.title),
-          heading: HeadingLevel.HEADING_1,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        })
-      );
+      docSections.push(new Paragraph({
+        text: htmlToText(ebook.title),
+        heading: HeadingLevel.HEADING_1,
+        alignment: AlignmentType.CENTER,
+        spacing: {
+          after: 400
+        }
+      }));
 
       // Add author
       if (ebook.author) {
-        docSections.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Escrito por ${ebook.author}`,
-                bold: true
-              })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 }
-          })
-        );
+        docSections.push(new Paragraph({
+          children: [new TextRun({
+            text: `Escrito por ${ebook.author}`,
+            bold: true
+          })],
+          alignment: AlignmentType.CENTER,
+          spacing: {
+            after: 400
+          }
+        }));
       }
 
       // Add description
       if (ebook.description) {
-        docSections.push(
-          new Paragraph({
-            text: htmlToText(ebook.description),
-            spacing: { after: 400 }
-          })
-        );
+        docSections.push(new Paragraph({
+          text: htmlToText(ebook.description),
+          spacing: {
+            after: 400
+          }
+        }));
       }
 
       // Add chapters
-      chapters.forEach((chapter) => {
-        docSections.push(
-          new Paragraph({
-            text: htmlToText(chapter.title),
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 }
-          })
-        );
-        
+      chapters.forEach(chapter => {
+        docSections.push(new Paragraph({
+          text: htmlToText(chapter.title),
+          heading: HeadingLevel.HEADING_2,
+          spacing: {
+            before: 400,
+            after: 200
+          }
+        }));
+
         // Split content by paragraphs
         const contentText = htmlToText(chapter.content);
         const paragraphs = contentText.split('\n').filter(p => p.trim());
-        
         paragraphs.forEach(para => {
-          docSections.push(
-            new Paragraph({
-              text: para,
-              spacing: { after: 200 }
-            })
-          );
+          docSections.push(new Paragraph({
+            text: para,
+            spacing: {
+              after: 200
+            }
+          }));
         });
       });
 
@@ -471,7 +461,6 @@ export default function Editor() {
       // Generate and download
       const blob = await Packer.toBlob(doc);
       saveAs(blob, `${htmlToText(ebook.title)}.docx`);
-      
       toast({
         title: "DOCX gerado!",
         description: "O download foi iniciado."
@@ -484,7 +473,6 @@ export default function Editor() {
       });
     }
   };
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -593,27 +581,17 @@ export default function Editor() {
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium mb-2 block">Título</label>
-                        <Input
-                          value={ebook.title.replace(/<[^>]*>/g, '')}
-                          onChange={(e) => setEbook({
-                            ...ebook,
-                            title: e.target.value
-                          })}
-                          placeholder="Título do ebook"
-                          className="w-full"
-                        />
+                        <Input value={ebook.title.replace(/<[^>]*>/g, '')} onChange={e => setEbook({
+                      ...ebook,
+                      title: e.target.value
+                    })} placeholder="Título do ebook" className="w-full" />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Descrição</label>
-                        <Textarea
-                          value={(ebook.description || "").replace(/<[^>]*>/g, '')}
-                          onChange={(e) => setEbook({
-                            ...ebook,
-                            description: e.target.value
-                          })}
-                          placeholder="Descrição do ebook"
-                          className="w-full min-h-[200px]"
-                        />
+                        <Textarea value={(ebook.description || "").replace(/<[^>]*>/g, '')} onChange={e => setEbook({
+                      ...ebook,
+                      description: e.target.value
+                    })} placeholder="Descrição do ebook" className="w-full min-h-[200px]" />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">Autor</label>
@@ -625,7 +603,7 @@ export default function Editor() {
 
                       <div className="space-y-2">
                         <Label htmlFor="genre-edit">Gênero</Label>
-                        <Select value={ebook.genre || ""} onValueChange={(value) => setEbook({
+                        <Select value={ebook.genre || ""} onValueChange={value => setEbook({
                       ...ebook,
                       genre: value
                     })}>
@@ -633,18 +611,16 @@ export default function Editor() {
                             <SelectValue placeholder="Selecione um gênero" />
                           </SelectTrigger>
                           <SelectContent>
-                            {genres.map((genre) => (
-                              <SelectItem key={genre.id} value={genre.name}>
+                            {genres.map(genre => <SelectItem key={genre.id} value={genre.name}>
                                 {genre.name}
-                              </SelectItem>
-                            ))}
+                              </SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="price-type-edit">Tipo de Preço</Label>
-                        <Select value={ebook.price === 0 ? "free" : "paid"} onValueChange={(value) => {
+                        <Select value={ebook.price === 0 ? "free" : "paid"} onValueChange={value => {
                       const isFree = value === "free";
                       setEbook({
                         ...ebook,
@@ -661,23 +637,13 @@ export default function Editor() {
                         </Select>
                       </div>
 
-                      {ebook.price > 0 && (
-                        <div className="space-y-2">
+                      {ebook.price > 0 && <div className="space-y-2">
                           <Label htmlFor="price-edit">Preço (MZN)</Label>
-                          <Input 
-                            id="price-edit" 
-                            type="number" 
-                            min="0" 
-                            step="0.01"
-                            placeholder="0.00" 
-                            value={ebook.price} 
-                            onChange={e => setEbook({
-                              ...ebook,
-                              price: parseFloat(e.target.value) || 0
-                            })} 
-                          />
-                        </div>
-                      )}
+                          <Input id="price-edit" type="number" min="0" step="0.01" placeholder="0.00" value={ebook.price} onChange={e => setEbook({
+                      ...ebook,
+                      price: parseFloat(e.target.value) || 0
+                    })} />
+                        </div>}
 
                       <div>
                         <label className="text-sm font-medium mb-2 block">Capa do Ebook</label>
@@ -709,23 +675,13 @@ export default function Editor() {
                         <label className="text-sm font-medium mb-2 block">
                           Título do Capítulo
                         </label>
-                        <Input
-                          value={selectedChapter.title.replace(/<[^>]*>/g, '')}
-                          onChange={(e) => updateChapter(selectedChapterId, "title", e.target.value)}
-                          placeholder="Título do capítulo"
-                          className="w-full"
-                        />
+                        <Input value={selectedChapter.title.replace(/<[^>]*>/g, '')} onChange={e => updateChapter(selectedChapterId, "title", e.target.value)} placeholder="Título do capítulo" className="w-full" />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block">
                           Conteúdo
                         </label>
-                        <Textarea
-                          value={selectedChapter.content.replace(/<[^>]*>/g, '')}
-                          onChange={(e) => updateChapter(selectedChapterId, "content", e.target.value)}
-                          placeholder="Escreva o conteúdo do capítulo..."
-                          className="w-full min-h-[400px]"
-                        />
+                        <Textarea value={selectedChapter.content.replace(/<[^>]*>/g, '')} onChange={e => updateChapter(selectedChapterId, "content", e.target.value)} placeholder="Escreva o conteúdo do capítulo..." className="w-full min-h-[400px]" />
                       </div>
                     </CardContent>
                   </Card>}
@@ -738,12 +694,11 @@ export default function Editor() {
               <div className="bg-background p-4 rounded-lg border">
                 <h2 className="text-2xl font-bold mb-2">Visualização do Editor</h2>
                 <p className="text-sm text-muted-foreground">
-                  Edite seu ebook em formato de página 8.5"x11". Cada capítulo inicia numa nova página.
+                  Edite seu ebook. Cada capítulo inicia numa nova página.
                 </p>
               </div>
               
-              <SimplifiedCKEditor
-                value={`
+              <SimplifiedCKEditor value={`
                   <div style="text-align: center; margin-bottom: 3rem;">
                     <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">${ebook?.title || ''}</h1>
                     <p style="font-size: 1.2rem; margin-bottom: 1rem;"><strong>Autor:</strong> ${ebook?.author || ''}</p>
@@ -758,13 +713,11 @@ export default function Editor() {
                     <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 2rem; color: #3B6AB8;">${chapter.title}</h2>
                     <div>${chapter.content}</div>
                   `).join('')}
-                `}
-                onChange={(content) => {
-                  // Extract chapter content from the full document
-                  // This is a simplified approach - in production you'd want more robust parsing
-                  console.log('Content updated:', content);
-                }}
-              />
+                `} onChange={content => {
+              // Extract chapter content from the full document
+              // This is a simplified approach - in production you'd want more robust parsing
+              console.log('Content updated:', content);
+            }} />
             </div>
           </TabsContent>
         </Tabs>
