@@ -8,7 +8,19 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User, ThumbsUp, ThumbsDown, MessageSquare, MoreVertical } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  Star,
+  Download,
+  FileText,
+  Calendar,
+  User,
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquare,
+  MoreVertical,
+} from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BookCard } from "@/components/BookCard";
@@ -95,10 +107,10 @@ export default function BookDetails() {
         .order("created_at", {
           ascending: false,
         });
-      
+
       console.log("Reviews data:", reviewsData);
       console.log("Reviews error:", reviewsError);
-      
+
       if (reviewsError) {
         console.error("Error fetching reviews:", reviewsError);
       }
@@ -228,18 +240,21 @@ export default function BookDetails() {
       toast.error("Faça login para deixar uma avaliação");
       return;
     }
-    
+
     console.log("Submitting review for user:", user.id, "ebook:", id);
-    
-    const { data, error } = await supabase.from("reviews").insert({
-      ebook_id: id,
-      user_id: user.id,
-      rating: newReview.rating,
-      comment: newReview.comment,
-    }).select();
-    
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert({
+        ebook_id: id,
+        user_id: user.id,
+        rating: newReview.rating,
+        comment: newReview.comment,
+      })
+      .select();
+
     console.log("Insert result:", data, error);
-    
+
     if (error) {
       console.error("Error submitting review:", error);
       toast.error("Erro ao enviar avaliação: " + error.message);
@@ -281,7 +296,11 @@ export default function BookDetails() {
             <DialogTrigger asChild>
               <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0 cursor-pointer hover:opacity-90 transition-opacity">
                 {book.cover_image ? (
-                  <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border rounded-lg" />
+                  <img
+                    src={book.cover_image}
+                    alt={book.title}
+                    className="object-cover w-full h-full border border-border rounded-lg"
+                  />
                 ) : (
                   <FileText className="h-20 w-20 text-muted-foreground" />
                 )}
@@ -517,6 +536,10 @@ export default function BookDetails() {
                         </div>
                         {review.comment && <p className="text-foreground">{review.comment}</p>}
                         <div className="flex items-center gap-4 pt-2">
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>Responder</span>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -535,10 +558,7 @@ export default function BookDetails() {
                             <ThumbsDown className="h-4 w-4" />
                             {review.dislikes_count > 0 && <span>{review.dislikes_count}</span>}
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2">
-                            <MessageSquare className="h-4 w-4" />
-                            <span>Responder</span>
-                          </Button>
+
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
