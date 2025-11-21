@@ -7,10 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User, ThumbsUp, ThumbsDown, MessageSquare, MoreVertical, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User, ThumbsUp, ThumbsDown, MessageSquare, MoreVertical } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BookCard } from "@/components/BookCard";
@@ -439,21 +437,15 @@ export default function BookDetails() {
                 )}
               </div>
               {reviews.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <ArrowUpDown className="h-4 w-4" />
-                      {sortBy === "recent" && "Mais recentes"}
-                      {sortBy === "oldest" && "Mais antigas"}
-                      {sortBy === "highest" && "Melhor avaliadas"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSortBy("recent")}>Mais recentes</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy("oldest")}>Mais antigas</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy("highest")}>Melhor avaliadas</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-3 py-2 rounded-md border bg-background text-sm"
+                >
+                  <option value="recent">Mais recentes</option>
+                  <option value="oldest">Mais antigas</option>
+                  <option value="highest">Melhor avaliadas</option>
+                </select>
               )}
             </div>
 
@@ -502,12 +494,9 @@ export default function BookDetails() {
                 <>
                   {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map((review) => (
                     <div key={review.id} className="flex gap-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={review.profiles?.avatar_url} />
-                        <AvatarFallback>
-                          {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
+                        {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
+                      </div>
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
