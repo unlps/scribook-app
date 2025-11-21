@@ -166,12 +166,53 @@ export type Database = {
         }
         Relationships: []
       }
+      review_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          reaction_type: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reaction_type: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reaction_type?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reactions_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null
           created_at: string
+          dislikes_count: number | null
           ebook_id: string
           id: string
+          likes_count: number | null
           rating: number
           updated_at: string
           user_id: string
@@ -179,8 +220,10 @@ export type Database = {
         Insert: {
           comment?: string | null
           created_at?: string
+          dislikes_count?: number | null
           ebook_id: string
           id?: string
+          likes_count?: number | null
           rating: number
           updated_at?: string
           user_id: string
@@ -188,8 +231,10 @@ export type Database = {
         Update: {
           comment?: string | null
           created_at?: string
+          dislikes_count?: number | null
           ebook_id?: string
           id?: string
+          likes_count?: number | null
           rating?: number
           updated_at?: string
           user_id?: string
