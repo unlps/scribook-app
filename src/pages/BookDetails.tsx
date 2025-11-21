@@ -54,6 +54,7 @@ export default function BookDetails() {
     comment: "",
   });
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   useEffect(() => {
     fetchBookDetails();
     checkWishlistStatus();
@@ -70,7 +71,7 @@ export default function BookDetails() {
       setBook(bookData);
 
       // Fetch reviews
-      const { data: reviewsData } = await supabase
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from("reviews")
         .select(
           `
@@ -78,7 +79,8 @@ export default function BookDetails() {
           rating,
           comment,
           created_at,
-          profiles!reviews_user_id_fkey (
+          user_id,
+          profiles (
             full_name,
             avatar_url
           )
@@ -88,6 +90,10 @@ export default function BookDetails() {
         .order("created_at", {
           ascending: false,
         });
+      
+      if (reviewsError) {
+        console.error("Error fetching reviews:", reviewsError);
+      }
       setReviews((reviewsData as any) || []);
 
       // Fetch similar books (same genre)
@@ -398,31 +404,51 @@ export default function BookDetails() {
               {reviews.length === 0 ? (
                 <p className="text-muted-foreground">Ainda não há avaliações</p>
               ) : (
-                reviews.map((review) => (
-                  <Card key={review.id} className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                              />
-                            ))}
+                <>
+                  {(showAllReviews ? reviews : reviews.slice(0, 5)).map((review) => (
+                    <Card key={review.id} className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
+                                />
+                              ))}
+                            </div>
                           </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {format(new Date(review.created_at), "dd MMM yyyy", {
+                              locale: ptBR,
+                            })}
+                          </p>
+                          {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {format(new Date(review.created_at), "dd MMM yyyy", {
-                            locale: ptBR,
-                          })}
-                        </p>
-                        {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
                       </div>
-                    </div>
-                  </Card>
-                ))
+                    </Card>
+                  ))}
+                  {reviews.length > 5 && !showAllReviews && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAllReviews(true)}
+                      className="w-full"
+                    >
+                      Ver mais avaliações ({reviews.length - 5} restantes)
+                    </Button>
+                  )}
+                  {showAllReviews && reviews.length > 5 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAllReviews(false)}
+                      className="w-full"
+                    >
+                      Ver menos
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
