@@ -205,7 +205,7 @@ export default function BookDetails() {
           {/* Left - Book Cover */}
           <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0">
             {book.cover_image ? (
-              <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border" />
+              <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border rounded-lg" />
             ) : (
               <FileText className="h-20 w-20 text-muted-foreground" />
             )}
