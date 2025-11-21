@@ -214,7 +214,7 @@ export default function BookDetails() {
                 )}
               </div>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
               <img src={book.cover_image} alt={book.title} className="w-full h-auto rounded-lg" />
             </DialogContent>
           </Dialog>
