@@ -217,7 +217,7 @@ export default function BookDetails() {
               <h1 className="text-4xl font-bold mb-2">{stripHtml(book.title)}</h1>
               <p className="text-xl text-muted-foreground mb-4">{book.author}</p>
 
-              <div className="flex-wrap gap-4 mb-6 flex items-start justify-start">
+              <div className="flex flex-wrap gap-4 mb-6 justify-center md:justify-start items-center md:items-start text-center md:text-left">
                 {book.genre && <Badge variant="secondary">{book.genre}</Badge>}
                 {book.rating && book.rating > 0 && (
                   <div className="flex items-center gap-1">
