@@ -428,7 +428,7 @@ export default function BookDetails() {
                         </div>
                         {review.comment && <p className="text-foreground">{review.comment}</p>}
                         <div className="flex items-center gap-4 pt-2">
-                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2 text-stone-400">
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2 text-stone-500">
                             <MessageSquare className="h-4 w-4" />
                             <span>Responder</span>
                           </Button>
