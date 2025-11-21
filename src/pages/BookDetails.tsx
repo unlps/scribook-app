@@ -269,7 +269,7 @@ export default function BookDetails() {
         {/* Bottom Section - Description and More */}
         <div className="space-y-8">
           <div>
-            <h2 className="text-2xl font-bold mb-4">Descrição</h2>
+            <h2 className="text-2xl font-bold mb-6">Descrição</h2>
             <div
               className="text-muted-foreground leading-relaxed text-justify"
               dangerouslySetInnerHTML={{
