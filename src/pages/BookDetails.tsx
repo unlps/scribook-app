@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User } from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User, ThumbsUp, ThumbsDown, MessageSquare, MoreVertical, ArrowUpDown } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BookCard } from "@/components/BookCard";
 import BottomNav from "@/components/BottomNav";
@@ -35,6 +37,8 @@ interface Review {
   rating: number;
   comment?: string;
   created_at: string;
+  likes_count: number;
+  dislikes_count: number;
   profiles: {
     full_name?: string;
     avatar_url?: string;
@@ -55,6 +59,7 @@ export default function BookDetails() {
   });
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "highest">("recent");
   useEffect(() => {
     fetchBookDetails();
     checkWishlistStatus();
@@ -80,6 +85,8 @@ export default function BookDetails() {
           comment,
           created_at,
           user_id,
+          likes_count,
+          dislikes_count,
           profiles (
             full_name,
             avatar_url
@@ -163,6 +170,58 @@ export default function BookDetails() {
       toast.success("Adicionado à wishlist");
     }
   };
+  const handleReaction = async (reviewId: string, reactionType: "like" | "dislike") => {
+    if (!currentUser) {
+      toast.error("Faça login para reagir");
+      return;
+    }
+
+    try {
+      // Check if user already reacted
+      const { data: existing } = await supabase
+        .from("review_reactions")
+        .select("*")
+        .eq("review_id", reviewId)
+        .eq("user_id", currentUser)
+        .maybeSingle();
+
+      if (existing) {
+        if (existing.reaction_type === reactionType) {
+          // Remove reaction
+          await supabase.from("review_reactions").delete().eq("id", existing.id);
+        } else {
+          // Update reaction
+          await supabase.from("review_reactions").update({ reaction_type: reactionType }).eq("id", existing.id);
+        }
+      } else {
+        // Add new reaction
+        await supabase.from("review_reactions").insert({
+          review_id: reviewId,
+          user_id: currentUser,
+          reaction_type: reactionType,
+        });
+      }
+
+      // Refresh reviews
+      fetchBookDetails();
+    } catch (error) {
+      console.error("Error handling reaction:", error);
+      toast.error("Erro ao processar reação");
+    }
+  };
+
+  const getSortedReviews = () => {
+    const sorted = [...reviews];
+    switch (sortBy) {
+      case "oldest":
+        return sorted.reverse();
+      case "highest":
+        return sorted.sort((a, b) => b.rating - a.rating);
+      default:
+        return sorted;
+    }
+  };
+
   const submitReview = async () => {
     const {
       data: { user },
@@ -370,7 +429,33 @@ export default function BookDetails() {
           {/* Reviews */}
           <div>
             <Separator className="my-6" />
-            <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold">Avaliações</h2>
+                {reviews.length > 0 && (
+                  <Badge variant="secondary" className="rounded-full">
+                    {reviews.length}
+                  </Badge>
+                )}
+              </div>
+              {reviews.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <ArrowUpDown className="h-4 w-4" />
+                      {sortBy === "recent" && "Mais recentes"}
+                      {sortBy === "oldest" && "Mais antigas"}
+                      {sortBy === "highest" && "Melhor avaliadas"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy("recent")}>Mais recentes</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy("oldest")}>Mais antigas</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy("highest")}>Melhor avaliadas</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
 
             {/* Add Review */}
             {currentUser && (
@@ -410,51 +495,75 @@ export default function BookDetails() {
             )}
 
             {/* Reviews List */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {reviews.length === 0 ? (
                 <p className="text-muted-foreground">Ainda não há avaliações</p>
               ) : (
                 <>
-                  {(showAllReviews ? reviews : reviews.slice(0, 5)).map((review) => (
-                    <Card key={review.id} className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
-                            <div className="flex">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {format(new Date(review.created_at), "dd MMM yyyy", {
+                  {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map((review) => (
+                    <div key={review.id} className="flex gap-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={review.profiles?.avatar_url} />
+                        <AvatarFallback>
+                          {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {formatDistanceToNow(new Date(review.created_at), {
+                              addSuffix: true,
                               locale: ptBR,
                             })}
-                          </p>
-                          {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
+                            />
+                          ))}
+                        </div>
+                        {review.comment && <p className="text-foreground">{review.comment}</p>}
+                        <div className="flex items-center gap-4 pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-2 px-2"
+                            onClick={() => handleReaction(review.id, "like")}
+                          >
+                            <ThumbsUp className="h-4 w-4" />
+                            {review.likes_count > 0 && <span>{review.likes_count}</span>}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-2 px-2"
+                            onClick={() => handleReaction(review.id, "dislike")}
+                          >
+                            <ThumbsDown className="h-4 w-4" />
+                            {review.dislikes_count > 0 && <span>{review.dislikes_count}</span>}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>Responder</span>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                   {reviews.length > 5 && !showAllReviews && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAllReviews(true)}
-                      className="w-full"
-                    >
+                    <Button variant="outline" onClick={() => setShowAllReviews(true)} className="w-full">
                       Ver mais avaliações ({reviews.length - 5} restantes)
                     </Button>
                   )}
                   {showAllReviews && reviews.length > 5 && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAllReviews(false)}
-                      className="w-full"
-                    >
+                    <Button variant="outline" onClick={() => setShowAllReviews(false)} className="w-full">
                       Ver menos
                     </Button>
                   )}
