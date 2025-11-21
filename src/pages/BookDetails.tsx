@@ -8,19 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Heart,
-  Star,
-  Download,
-  FileText,
-  Calendar,
-  User,
-  ThumbsUp,
-  ThumbsDown,
-  MessageSquare,
-  MoreVertical,
-} from "lucide-react";
+import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User, ThumbsUp, ThumbsDown, MessageSquare, MoreVertical } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BookCard } from "@/components/BookCard";
@@ -55,7 +43,9 @@ interface Review {
   };
 }
 export default function BookDetails() {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState<Ebook | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -65,7 +55,7 @@ export default function BookDetails() {
   const [loading, setLoading] = useState(true);
   const [newReview, setNewReview] = useState({
     rating: 5,
-    comment: "",
+    comment: ""
   });
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -76,20 +66,25 @@ export default function BookDetails() {
     fetchCurrentUser();
   }, [id]);
   const fetchCurrentUser = async () => {
-    const { data } = await supabase.auth.getUser();
+    const {
+      data
+    } = await supabase.auth.getUser();
     setCurrentUser(data.user?.id || null);
   };
   const fetchBookDetails = async () => {
     try {
-      const { data: bookData, error: bookError } = await supabase.from("ebooks").select("*").eq("id", id).single();
+      const {
+        data: bookData,
+        error: bookError
+      } = await supabase.from("ebooks").select("*").eq("id", id).single();
       if (bookError) throw bookError;
       setBook(bookData);
 
       // Fetch reviews
-      const { data: reviewsData, error: reviewsError } = await supabase
-        .from("reviews")
-        .select(
-          `
+      const {
+        data: reviewsData,
+        error: reviewsError
+      } = await supabase.from("reviews").select(`
           id,
           rating,
           comment,
@@ -101,42 +96,29 @@ export default function BookDetails() {
             full_name,
             avatar_url
           )
-        `,
-        )
-        .eq("ebook_id", id)
-        .order("created_at", {
-          ascending: false,
-        });
-
+        `).eq("ebook_id", id).order("created_at", {
+        ascending: false
+      });
       console.log("Reviews data:", reviewsData);
       console.log("Reviews error:", reviewsError);
-
       if (reviewsError) {
         console.error("Error fetching reviews:", reviewsError);
       }
-      setReviews((reviewsData as any) || []);
+      setReviews(reviewsData as any || []);
 
       // Fetch similar books (same genre)
       if (bookData.genre) {
-        const { data: similarData } = await supabase
-          .from("ebooks")
-          .select("*")
-          .eq("genre", bookData.genre)
-          .eq("is_public", true)
-          .neq("id", id)
-          .limit(4);
+        const {
+          data: similarData
+        } = await supabase.from("ebooks").select("*").eq("genre", bookData.genre).eq("is_public", true).neq("id", id).limit(4);
         setSimilarBooks(similarData || []);
       }
 
       // Fetch author's other books
       if (bookData.user_id) {
-        const { data: authorData } = await supabase
-          .from("ebooks")
-          .select("*")
-          .eq("user_id", bookData.user_id)
-          .eq("is_public", true)
-          .neq("id", id)
-          .limit(4);
+        const {
+          data: authorData
+        } = await supabase.from("ebooks").select("*").eq("user_id", bookData.user_id).eq("is_public", true).neq("id", id).limit(4);
         setAuthorBooks(authorData || []);
       }
     } catch (error) {
@@ -148,20 +130,21 @@ export default function BookDetails() {
   };
   const checkWishlistStatus = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
-      .from("wishlist")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("ebook_id", id)
-      .maybeSingle();
+    const {
+      data
+    } = await supabase.from("wishlist").select("id").eq("user_id", user.id).eq("ebook_id", id).maybeSingle();
     setIsInWishlist(!!data);
   };
   const toggleWishlist = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para adicionar à wishlist");
@@ -174,7 +157,7 @@ export default function BookDetails() {
     } else {
       await supabase.from("wishlist").insert({
         user_id: user.id,
-        ebook_id: id,
+        ebook_id: id
       });
       setIsInWishlist(true);
       toast.success("Adicionado à wishlist");
@@ -185,30 +168,27 @@ export default function BookDetails() {
       toast.error("Faça login para reagir");
       return;
     }
-
     try {
       // Check if user already reacted
-      const { data: existing } = await supabase
-        .from("review_reactions")
-        .select("*")
-        .eq("review_id", reviewId)
-        .eq("user_id", currentUser)
-        .maybeSingle();
-
+      const {
+        data: existing
+      } = await supabase.from("review_reactions").select("*").eq("review_id", reviewId).eq("user_id", currentUser).maybeSingle();
       if (existing) {
         if (existing.reaction_type === reactionType) {
           // Remove reaction
           await supabase.from("review_reactions").delete().eq("id", existing.id);
         } else {
           // Update reaction
-          await supabase.from("review_reactions").update({ reaction_type: reactionType }).eq("id", existing.id);
+          await supabase.from("review_reactions").update({
+            reaction_type: reactionType
+          }).eq("id", existing.id);
         }
       } else {
         // Add new reaction
         await supabase.from("review_reactions").insert({
           review_id: reviewId,
           user_id: currentUser,
-          reaction_type: reactionType,
+          reaction_type: reactionType
         });
       }
 
@@ -219,7 +199,6 @@ export default function BookDetails() {
       toast.error("Erro ao processar reação");
     }
   };
-
   const getSortedReviews = () => {
     const sorted = [...reviews];
     switch (sortBy) {
@@ -231,30 +210,27 @@ export default function BookDetails() {
         return sorted;
     }
   };
-
   const submitReview = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para deixar uma avaliação");
       return;
     }
-
     console.log("Submitting review for user:", user.id, "ebook:", id);
-
-    const { data, error } = await supabase
-      .from("reviews")
-      .insert({
-        ebook_id: id,
-        user_id: user.id,
-        rating: newReview.rating,
-        comment: newReview.comment,
-      })
-      .select();
-
+    const {
+      data,
+      error
+    } = await supabase.from("reviews").insert({
+      ebook_id: id,
+      user_id: user.id,
+      rating: newReview.rating,
+      comment: newReview.comment
+    }).select();
     console.log("Insert result:", data, error);
-
     if (error) {
       console.error("Error submitting review:", error);
       toast.error("Erro ao enviar avaliação: " + error.message);
@@ -262,27 +238,22 @@ export default function BookDetails() {
       toast.success("Avaliação enviada!");
       setNewReview({
         rating: 5,
-        comment: "",
+        comment: ""
       });
       fetchBookDetails();
     }
   };
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Carregando...</p>
-      </div>
-    );
+      </div>;
   }
   if (!book) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Livro não encontrado</p>
-      </div>
-    );
+      </div>;
   }
-  return (
-    <div className="min-h-screen bg-background pb-24">
+  return <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -295,15 +266,7 @@ export default function BookDetails() {
           <Dialog>
             <DialogTrigger asChild>
               <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0 cursor-pointer hover:opacity-90 transition-opacity">
-                {book.cover_image ? (
-                  <img
-                    src={book.cover_image}
-                    alt={book.title}
-                    className="object-cover w-full h-full border border-border rounded-lg"
-                  />
-                ) : (
-                  <FileText className="h-20 w-20 text-muted-foreground" />
-                )}
+                {book.cover_image ? <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border rounded-lg" /> : <FileText className="h-20 w-20 text-muted-foreground" />}
               </div>
             </DialogTrigger>
             <DialogContent className="max-w-md">
@@ -319,12 +282,10 @@ export default function BookDetails() {
 
               <div className="flex flex-wrap gap-4 mb-6 justify-center md:justify-start items-center md:items-start text-center md:text-left">
                 {book.genre && <Badge variant="secondary">{book.genre}</Badge>}
-                {book.rating && book.rating > 0 && (
-                  <div className="flex items-center gap-1">
+                {book.rating && book.rating > 0 && <div className="flex items-center gap-1">
                     <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
                     <span className="font-medium">{book.rating.toFixed(1)}</span>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Download className="h-4 w-4" />
                   <span>{book.downloads} downloads</span>
@@ -333,24 +294,20 @@ export default function BookDetails() {
                   <FileText className="h-4 w-4" />
                   <span>{book.pages} páginas</span>
                 </div>
-                {book.published_at && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                {book.published_at && <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>
                       {format(new Date(book.published_at), "dd MMM yyyy", {
-                        locale: ptBR,
-                      })}
+                    locale: ptBR
+                  })}
                     </span>
-                  </div>
-                )}
+                  </div>}
               </div>
 
-              {book.formats && book.formats.length > 0 && (
-                <div className="mb-6">
+              {book.formats && book.formats.length > 0 && <div className="mb-6">
                   <span className="text-sm font-medium">Formatos disponíveis: </span>
                   <span className="text-sm">{book.formats.join(", ")}</span>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Action Buttons */}
@@ -370,24 +327,19 @@ export default function BookDetails() {
         <div className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold mb-4">Descrição</h2>
-            <div
-              className="text-muted-foreground leading-relaxed text-justify"
-              dangerouslySetInnerHTML={{
-                __html: book.description || "Sem descrição disponível",
-              }}
-            />
+            <div className="text-muted-foreground leading-relaxed text-justify" dangerouslySetInnerHTML={{
+            __html: book.description || "Sem descrição disponível"
+          }} />
           </div>
 
           {/* Preview */}
-          {book.preview_content && (
-            <div>
+          {book.preview_content && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Leitura de Amostra</h2>
               <Card className="p-6 bg-muted/50">
                 <p className="whitespace-pre-line">{book.preview_content}</p>
               </Card>
-            </div>
-          )}
+            </div>}
 
           {/* About Author */}
           <div>
@@ -400,48 +352,22 @@ export default function BookDetails() {
           </div>
 
           {/* More from Author */}
-          {authorBooks.length > 0 && (
-            <div>
+          {authorBooks.length > 0 && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Mais do Autor</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {authorBooks.map((authorBook) => (
-                  <BookCard
-                    key={authorBook.id}
-                    id={authorBook.id}
-                    title={authorBook.title}
-                    author={authorBook.author || ""}
-                    coverImage={authorBook.cover_image}
-                    genre={authorBook.genre}
-                    price={authorBook.price}
-                    rating={authorBook.rating}
-                  />
-                ))}
+                {authorBooks.map(authorBook => <BookCard key={authorBook.id} id={authorBook.id} title={authorBook.title} author={authorBook.author || ""} coverImage={authorBook.cover_image} genre={authorBook.genre} price={authorBook.price} rating={authorBook.rating} />)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Similar Books */}
-          {similarBooks.length > 0 && (
-            <div>
+          {similarBooks.length > 0 && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Livros Semelhantes</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {similarBooks.map((similarBook) => (
-                  <BookCard
-                    key={similarBook.id}
-                    id={similarBook.id}
-                    title={similarBook.title}
-                    author={similarBook.author || ""}
-                    coverImage={similarBook.cover_image}
-                    genre={similarBook.genre}
-                    price={similarBook.price}
-                    rating={similarBook.rating}
-                  />
-                ))}
+                {similarBooks.map(similarBook => <BookCard key={similarBook.id} id={similarBook.id} title={similarBook.title} author={similarBook.author || ""} coverImage={similarBook.cover_image} genre={similarBook.genre} price={similarBook.price} rating={similarBook.rating} />)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Reviews */}
           <div>
@@ -449,70 +375,41 @@ export default function BookDetails() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold">Avaliações</h2>
-                {reviews.length > 0 && (
-                  <Badge variant="secondary" className="rounded-full">
+                {reviews.length > 0 && <Badge variant="secondary" className="rounded-full">
                     {reviews.length}
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
-              {reviews.length > 0 && (
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-3 py-2 rounded-md border bg-background text-sm"
-                >
+              {reviews.length > 0 && <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="px-3 py-2 rounded-md border bg-background text-sm">
                   <option value="recent">Mais recentes</option>
                   <option value="oldest">Mais antigas</option>
                   <option value="highest">Melhor avaliadas</option>
-                </select>
-              )}
+                </select>}
             </div>
 
             {/* Add Review */}
-            {currentUser && (
-              <Card className="p-6 mb-6">
+            {currentUser && <Card className="p-6 mb-6">
                 <h3 className="font-semibold mb-4">Deixe sua avaliação</h3>
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() =>
-                          setNewReview({
-                            ...newReview,
-                            rating: star,
-                          })
-                        }
-                      >
-                        <Star
-                          className={`h-6 w-6 ${star <= newReview.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                        />
-                      </button>
-                    ))}
+                    {[1, 2, 3, 4, 5].map(star => <button key={star} onClick={() => setNewReview({
+                  ...newReview,
+                  rating: star
+                })}>
+                        <Star className={`h-6 w-6 ${star <= newReview.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
+                      </button>)}
                   </div>
-                  <Textarea
-                    placeholder="Escreva sua avaliação..."
-                    value={newReview.comment}
-                    onChange={(e) =>
-                      setNewReview({
-                        ...newReview,
-                        comment: e.target.value,
-                      })
-                    }
-                  />
+                  <Textarea placeholder="Escreva sua avaliação..." value={newReview.comment} onChange={e => setNewReview({
+                ...newReview,
+                comment: e.target.value
+              })} />
                   <Button onClick={submitReview}>Enviar Avaliação</Button>
                 </div>
-              </Card>
-            )}
+              </Card>}
 
             {/* Reviews List */}
             <div className="space-y-6">
-              {reviews.length === 0 ? (
-                <p className="text-muted-foreground">Ainda não há avaliações</p>
-              ) : (
-                <>
-                  {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map((review) => (
-                    <div key={review.id} className="flex gap-4">
+              {reviews.length === 0 ? <p className="text-muted-foreground">Ainda não há avaliações</p> : <>
+                  {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map(review => <div key={review.id} className="flex gap-4">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
                         {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
                       </div>
@@ -521,40 +418,25 @@ export default function BookDetails() {
                           <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
                           <span className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(review.created_at), {
-                              addSuffix: true,
-                              locale: ptBR,
-                            })}
+                        addSuffix: true,
+                        locale: ptBR
+                      })}
                           </span>
                         </div>
                         <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map(star => <Star key={star} className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />)}
                         </div>
                         {review.comment && <p className="text-foreground">{review.comment}</p>}
                         <div className="flex items-center gap-4 pt-2">
-                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2">
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2 text-stone-400">
                             <MessageSquare className="h-4 w-4" />
                             <span>Responder</span>
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-2 px-2"
-                            onClick={() => handleReaction(review.id, "like")}
-                          >
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2" onClick={() => handleReaction(review.id, "like")}>
                             <ThumbsUp className="h-4 w-4" />
                             {review.likes_count > 0 && <span>{review.likes_count}</span>}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-2 px-2"
-                            onClick={() => handleReaction(review.id, "dislike")}
-                          >
+                          <Button variant="ghost" size="sm" className="h-8 gap-2 px-2" onClick={() => handleReaction(review.id, "dislike")}>
                             <ThumbsDown className="h-4 w-4" />
                             {review.dislikes_count > 0 && <span>{review.dislikes_count}</span>}
                           </Button>
@@ -564,26 +446,19 @@ export default function BookDetails() {
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {reviews.length > 5 && !showAllReviews && (
-                    <Button variant="outline" onClick={() => setShowAllReviews(true)} className="w-full">
+                    </div>)}
+                  {reviews.length > 5 && !showAllReviews && <Button variant="outline" onClick={() => setShowAllReviews(true)} className="w-full">
                       Ver mais avaliações ({reviews.length - 5} restantes)
-                    </Button>
-                  )}
-                  {showAllReviews && reviews.length > 5 && (
-                    <Button variant="outline" onClick={() => setShowAllReviews(false)} className="w-full">
+                    </Button>}
+                  {showAllReviews && reviews.length > 5 && <Button variant="outline" onClick={() => setShowAllReviews(false)} className="w-full">
                       Ver menos
-                    </Button>
-                  )}
-                </>
-              )}
+                    </Button>}
+                </>}
             </div>
           </div>
         </div>
       </div>
 
       <BottomNav />
-    </div>
-  );
+    </div>;
 }
