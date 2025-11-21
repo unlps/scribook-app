@@ -91,6 +91,9 @@ export default function BookDetails() {
           ascending: false,
         });
       
+      console.log("Reviews data:", reviewsData);
+      console.log("Reviews error:", reviewsError);
+      
       if (reviewsError) {
         console.error("Error fetching reviews:", reviewsError);
       }
@@ -168,14 +171,21 @@ export default function BookDetails() {
       toast.error("Faça login para deixar uma avaliação");
       return;
     }
-    const { error } = await supabase.from("reviews").insert({
+    
+    console.log("Submitting review for user:", user.id, "ebook:", id);
+    
+    const { data, error } = await supabase.from("reviews").insert({
       ebook_id: id,
       user_id: user.id,
       rating: newReview.rating,
       comment: newReview.comment,
-    });
+    }).select();
+    
+    console.log("Insert result:", data, error);
+    
     if (error) {
-      toast.error("Erro ao enviar avaliação");
+      console.error("Error submitting review:", error);
+      toast.error("Erro ao enviar avaliação: " + error.message);
     } else {
       toast.success("Avaliação enviada!");
       setNewReview({
