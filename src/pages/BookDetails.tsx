@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Heart, Star, Download, FileText, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
@@ -203,13 +204,20 @@ export default function BookDetails() {
         {/* Top Section - Cover and Info Side by Side */}
         <div className="grid md:grid-cols-[200px_1fr] lg:grid-cols-[200px_1fr] gap-1 mb-12 text-center md:text-left">
           {/* Left - Book Cover */}
-          <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0">
-            {book.cover_image ? (
-              <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border rounded-lg" />
-            ) : (
-              <FileText className="h-20 w-20 text-muted-foreground" />
-            )}
-          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0 cursor-pointer hover:opacity-90 transition-opacity">
+                {book.cover_image ? (
+                  <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full border border-border rounded-lg" />
+                ) : (
+                  <FileText className="h-20 w-20 text-muted-foreground" />
+                )}
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <img src={book.cover_image} alt={book.title} className="w-full h-auto rounded-lg" />
+            </DialogContent>
+          </Dialog>
 
           {/* Right - Book Info and Actions */}
           <div className="space-y-6 text-center md:text-left">
