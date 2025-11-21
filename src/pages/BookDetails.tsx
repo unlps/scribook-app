@@ -211,7 +211,7 @@ export default function BookDetails() {
         </Button>
 
         {/* Top Section - Cover and Info Side by Side */}
-        <div className="grid md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] gap-8 mb-12">
+        <div className="grid md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] gap-4 mb-12">
           {/* Left - Book Cover */}
           <div className="bg-muted flex items-center justify-center w-44 h-72 rounded-lg overflow-hidden">
             {book.cover_image ? (
