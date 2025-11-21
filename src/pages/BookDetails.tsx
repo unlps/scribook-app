@@ -40,7 +40,9 @@ interface Review {
   };
 }
 export default function BookDetails() {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState<Ebook | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -50,7 +52,7 @@ export default function BookDetails() {
   const [loading, setLoading] = useState(true);
   const [newReview, setNewReview] = useState({
     rating: 5,
-    comment: "",
+    comment: ""
   });
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   useEffect(() => {
@@ -59,20 +61,24 @@ export default function BookDetails() {
     fetchCurrentUser();
   }, [id]);
   const fetchCurrentUser = async () => {
-    const { data } = await supabase.auth.getUser();
+    const {
+      data
+    } = await supabase.auth.getUser();
     setCurrentUser(data.user?.id || null);
   };
   const fetchBookDetails = async () => {
     try {
-      const { data: bookData, error: bookError } = await supabase.from("ebooks").select("*").eq("id", id).single();
+      const {
+        data: bookData,
+        error: bookError
+      } = await supabase.from("ebooks").select("*").eq("id", id).single();
       if (bookError) throw bookError;
       setBook(bookData);
 
       // Fetch reviews
-      const { data: reviewsData } = await supabase
-        .from("reviews")
-        .select(
-          `
+      const {
+        data: reviewsData
+      } = await supabase.from("reviews").select(`
           id,
           rating,
           comment,
@@ -81,35 +87,24 @@ export default function BookDetails() {
             full_name,
             avatar_url
           )
-        `,
-        )
-        .eq("ebook_id", id)
-        .order("created_at", {
-          ascending: false,
-        });
-      setReviews((reviewsData as any) || []);
+        `).eq("ebook_id", id).order("created_at", {
+        ascending: false
+      });
+      setReviews(reviewsData as any || []);
 
       // Fetch similar books (same genre)
       if (bookData.genre) {
-        const { data: similarData } = await supabase
-          .from("ebooks")
-          .select("*")
-          .eq("genre", bookData.genre)
-          .eq("is_public", true)
-          .neq("id", id)
-          .limit(4);
+        const {
+          data: similarData
+        } = await supabase.from("ebooks").select("*").eq("genre", bookData.genre).eq("is_public", true).neq("id", id).limit(4);
         setSimilarBooks(similarData || []);
       }
 
       // Fetch author's other books
       if (bookData.user_id) {
-        const { data: authorData } = await supabase
-          .from("ebooks")
-          .select("*")
-          .eq("user_id", bookData.user_id)
-          .eq("is_public", true)
-          .neq("id", id)
-          .limit(4);
+        const {
+          data: authorData
+        } = await supabase.from("ebooks").select("*").eq("user_id", bookData.user_id).eq("is_public", true).neq("id", id).limit(4);
         setAuthorBooks(authorData || []);
       }
     } catch (error) {
@@ -121,20 +116,21 @@ export default function BookDetails() {
   };
   const checkWishlistStatus = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
-      .from("wishlist")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("ebook_id", id)
-      .maybeSingle();
+    const {
+      data
+    } = await supabase.from("wishlist").select("id").eq("user_id", user.id).eq("ebook_id", id).maybeSingle();
     setIsInWishlist(!!data);
   };
   const toggleWishlist = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para adicionar à wishlist");
@@ -147,7 +143,7 @@ export default function BookDetails() {
     } else {
       await supabase.from("wishlist").insert({
         user_id: user.id,
-        ebook_id: id,
+        ebook_id: id
       });
       setIsInWishlist(true);
       toast.success("Adicionado à wishlist");
@@ -155,17 +151,21 @@ export default function BookDetails() {
   };
   const submitReview = async () => {
     const {
-      data: { user },
+      data: {
+        user
+      }
     } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para deixar uma avaliação");
       return;
     }
-    const { error } = await supabase.from("reviews").insert({
+    const {
+      error
+    } = await supabase.from("reviews").insert({
       ebook_id: id,
       user_id: user.id,
       rating: newReview.rating,
-      comment: newReview.comment,
+      comment: newReview.comment
     });
     if (error) {
       toast.error("Erro ao enviar avaliação");
@@ -173,27 +173,22 @@ export default function BookDetails() {
       toast.success("Avaliação enviada!");
       setNewReview({
         rating: 5,
-        comment: "",
+        comment: ""
       });
       fetchBookDetails();
     }
   };
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Carregando...</p>
-      </div>
-    );
+      </div>;
   }
   if (!book) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Livro não encontrado</p>
-      </div>
-    );
+      </div>;
   }
-  return (
-    <div className="min-h-screen bg-background pb-24">
+  return <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -204,11 +199,7 @@ export default function BookDetails() {
         <div className="grid md:grid-cols-[200px_1fr] lg:grid-cols-[250px_1fr] gap-1 mb-12 text-center md:text-left">
           {/* Left - Book Cover */}
           <div className="bg-muted flex items-center justify-center w-36 h-60 rounded-lg overflow-hidden mx-auto md:mx-0">
-            {book.cover_image ? (
-              <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full" />
-            ) : (
-              <FileText className="h-20 w-20 text-muted-foreground" />
-            )}
+            {book.cover_image ? <img src={book.cover_image} alt={book.title} className="object-cover w-full h-full" /> : <FileText className="h-20 w-20 text-muted-foreground" />}
           </div>
 
           {/* Right - Book Info and Actions */}
@@ -219,12 +210,10 @@ export default function BookDetails() {
 
               <div className="flex flex-wrap gap-4 mb-6 justify-center md:justify-start items-center md:items-start text-center md:text-left">
                 {book.genre && <Badge variant="secondary">{book.genre}</Badge>}
-                {book.rating && book.rating > 0 && (
-                  <div className="flex items-center gap-1">
+                {book.rating && book.rating > 0 && <div className="flex items-center gap-1">
                     <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
                     <span className="font-medium">{book.rating.toFixed(1)}</span>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Download className="h-4 w-4" />
                   <span>{book.downloads} downloads</span>
@@ -233,32 +222,28 @@ export default function BookDetails() {
                   <FileText className="h-4 w-4" />
                   <span>{book.pages} páginas</span>
                 </div>
-                {book.published_at && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                {book.published_at && <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>
                       {format(new Date(book.published_at), "dd MMM yyyy", {
-                        locale: ptBR,
-                      })}
+                    locale: ptBR
+                  })}
                     </span>
-                  </div>
-                )}
+                  </div>}
               </div>
 
-              {book.formats && book.formats.length > 0 && (
-                <div className="mb-6">
+              {book.formats && book.formats.length > 0 && <div className="mb-6">
                   <span className="text-sm font-medium">Formatos disponíveis: </span>
                   <span className="text-sm">{book.formats.join(", ")}</span>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1" size="lg">
+              <Button size="lg" className="flex-1 py-[8px]">
                 {book.price === 0 ? "Baixar Grátis" : `Comprar - ${book.price?.toFixed(2)} MZN`}
               </Button>
-              <Button variant="outline" className="flex-1" size="lg" onClick={toggleWishlist}>
+              <Button variant="outline" size="lg" onClick={toggleWishlist} className="flex-1 py-[8px]">
                 <Heart className={`h-4 w-4 mr-2 ${isInWishlist ? "fill-current" : ""}`} />
                 {isInWishlist ? "Na Wishlist" : "Adicionar à Wishlist"}
               </Button>
@@ -270,24 +255,19 @@ export default function BookDetails() {
         <div className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold mb-4">Descrição</h2>
-            <div
-              className="text-muted-foreground leading-relaxed text-justify"
-              dangerouslySetInnerHTML={{
-                __html: book.description || "Sem descrição disponível",
-              }}
-            />
+            <div className="text-muted-foreground leading-relaxed text-justify" dangerouslySetInnerHTML={{
+            __html: book.description || "Sem descrição disponível"
+          }} />
           </div>
 
           {/* Preview */}
-          {book.preview_content && (
-            <div>
+          {book.preview_content && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Leitura de Amostra</h2>
               <Card className="p-6 bg-muted/50">
                 <p className="whitespace-pre-line">{book.preview_content}</p>
               </Card>
-            </div>
-          )}
+            </div>}
 
           {/* About Author */}
           <div>
@@ -300,48 +280,22 @@ export default function BookDetails() {
           </div>
 
           {/* More from Author */}
-          {authorBooks.length > 0 && (
-            <div>
+          {authorBooks.length > 0 && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Mais do Autor</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {authorBooks.map((authorBook) => (
-                  <BookCard
-                    key={authorBook.id}
-                    id={authorBook.id}
-                    title={authorBook.title}
-                    author={authorBook.author || ""}
-                    coverImage={authorBook.cover_image}
-                    genre={authorBook.genre}
-                    price={authorBook.price}
-                    rating={authorBook.rating}
-                  />
-                ))}
+                {authorBooks.map(authorBook => <BookCard key={authorBook.id} id={authorBook.id} title={authorBook.title} author={authorBook.author || ""} coverImage={authorBook.cover_image} genre={authorBook.genre} price={authorBook.price} rating={authorBook.rating} />)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Similar Books */}
-          {similarBooks.length > 0 && (
-            <div>
+          {similarBooks.length > 0 && <div>
               <Separator className="my-6" />
               <h2 className="text-2xl font-bold mb-4">Livros Semelhantes</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {similarBooks.map((similarBook) => (
-                  <BookCard
-                    key={similarBook.id}
-                    id={similarBook.id}
-                    title={similarBook.title}
-                    author={similarBook.author || ""}
-                    coverImage={similarBook.cover_image}
-                    genre={similarBook.genre}
-                    price={similarBook.price}
-                    rating={similarBook.rating}
-                  />
-                ))}
+                {similarBooks.map(similarBook => <BookCard key={similarBook.id} id={similarBook.id} title={similarBook.title} author={similarBook.author || ""} coverImage={similarBook.cover_image} genre={similarBook.genre} price={similarBook.price} rating={similarBook.rating} />)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Reviews */}
           <div>
@@ -349,79 +303,50 @@ export default function BookDetails() {
             <h2 className="text-2xl font-bold mb-4">Avaliações</h2>
 
             {/* Add Review */}
-            {currentUser && (
-              <Card className="p-6 mb-6">
+            {currentUser && <Card className="p-6 mb-6">
                 <h3 className="font-semibold mb-4">Deixe sua avaliação</h3>
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() =>
-                          setNewReview({
-                            ...newReview,
-                            rating: star,
-                          })
-                        }
-                      >
-                        <Star
-                          className={`h-6 w-6 ${star <= newReview.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                        />
-                      </button>
-                    ))}
+                    {[1, 2, 3, 4, 5].map(star => <button key={star} onClick={() => setNewReview({
+                  ...newReview,
+                  rating: star
+                })}>
+                        <Star className={`h-6 w-6 ${star <= newReview.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
+                      </button>)}
                   </div>
-                  <Textarea
-                    placeholder="Escreva sua avaliação..."
-                    value={newReview.comment}
-                    onChange={(e) =>
-                      setNewReview({
-                        ...newReview,
-                        comment: e.target.value,
-                      })
-                    }
-                  />
+                  <Textarea placeholder="Escreva sua avaliação..." value={newReview.comment} onChange={e => setNewReview({
+                ...newReview,
+                comment: e.target.value
+              })} />
                   <Button onClick={submitReview}>Enviar Avaliação</Button>
                 </div>
-              </Card>
-            )}
+              </Card>}
 
             {/* Reviews List */}
             <div className="space-y-4">
-              {reviews.length === 0 ? (
-                <p className="text-muted-foreground">Ainda não há avaliações</p>
-              ) : (
-                reviews.map((review) => (
-                  <Card key={review.id} className="p-6">
+              {reviews.length === 0 ? <p className="text-muted-foreground">Ainda não há avaliações</p> : reviews.map(review => <Card key={review.id} className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
                           <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                              />
-                            ))}
+                            {[1, 2, 3, 4, 5].map(star => <Star key={star} className={`h-4 w-4 ${star <= review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />)}
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           {format(new Date(review.created_at), "dd MMM yyyy", {
-                            locale: ptBR,
-                          })}
+                      locale: ptBR
+                    })}
                         </p>
                         {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
                       </div>
                     </div>
-                  </Card>
-                ))
-              )}
+                  </Card>)}
             </div>
           </div>
         </div>
       </div>
 
       <BottomNav />
-    </div>
-  );
+    </div>;
 }
