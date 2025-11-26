@@ -15,6 +15,7 @@ import Account from "./pages/Account";
 import MyBooks from "./pages/MyBooks";
 import BookDetails from "./pages/BookDetails";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,8 @@ const App = () => (
             <Route path="/discover" element={<Discover />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/account/:userId" element={<Account />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/my-books" element={<MyBooks />} />
             <Route path="/book/:id" element={<BookDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
