@@ -145,26 +145,64 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          is_private: boolean | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          is_private?: boolean | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          is_private?: boolean | null
         }
         Relationships: []
+      }
+      purchases: {
+        Row: {
+          ebook_id: string
+          id: string
+          price: number
+          purchase_date: string
+          user_id: string
+        }
+        Insert: {
+          ebook_id: string
+          id?: string
+          price?: number
+          purchase_date?: string
+          user_id: string
+        }
+        Update: {
+          ebook_id?: string
+          id?: string
+          price?: number
+          purchase_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_ebook_id_fkey"
+            columns: ["ebook_id"]
+            isOneToOne: false
+            referencedRelation: "ebooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_reactions: {
         Row: {
@@ -286,6 +324,27 @@ export type Database = {
           suggested_pages?: string | null
           thumbnail?: string | null
           type?: Database["public"]["Enums"]["ebook_type"]
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
         }
         Relationships: []
       }
