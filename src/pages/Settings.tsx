@@ -6,7 +6,9 @@ import {
   Moon, 
   Languages, 
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  CreditCard,
+  Info
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
@@ -61,6 +63,32 @@ const Settings = () => {
               <span className="text-sm text-muted-foreground">Português (BR)</span>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
+          </div>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card className="p-4 hover:shadow-card transition-shadow cursor-pointer">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="font-medium">Métodos de Pagamento</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </Card>
+
+        {/* About Kutara Mabuku */}
+        <Card className="p-4 hover:shadow-card transition-shadow cursor-pointer">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <Info className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <span className="font-medium">Sobre Kutara Mabuku</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
         </Card>
       </main>
