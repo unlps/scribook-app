@@ -5,11 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Eye, Download, ArrowLeft, Trash2, Edit } from "lucide-react";
+import { BookOpen, Eye, Download, ArrowLeft, Trash2, Edit, Globe, Lock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
 import BottomNav from "@/components/BottomNav";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import jsPDF from "jspdf";
 import { stripHtml } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ interface Ebook {
   cover_image: string;
   created_at: string;
   author: string | null;
+  is_public: boolean;
 }
 
 const MyBooks = () => {
@@ -58,6 +60,34 @@ const MyBooks = () => {
 
     if (ebooksData) {
       setEbooks(ebooksData);
+    }
+  };
+
+  const handleTogglePublic = async (ebookId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from("ebooks")
+      .update({ is_public: !currentStatus })
+      .eq("id", ebookId);
+    
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível alterar a visibilidade",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: currentStatus ? "Livro privado" : "Livro público",
+      description: currentStatus 
+        ? "Agora apenas você pode ver este livro" 
+        : "Agora todos podem ver este livro no Discover"
+    });
+    
+    fetchEbooks();
+    if (selectedEbook && selectedEbook.id === ebookId) {
+      setSelectedEbook({ ...selectedEbook, is_public: !currentStatus });
     }
   };
 
@@ -256,7 +286,7 @@ const MyBooks = () => {
                 <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
                   {stripHtml(ebook.description || "Sem descrição")}
                 </p>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                   <span className="flex items-center gap-1">
                     <Eye className="h-3 w-3" />
                     {ebook.views}
@@ -264,6 +294,21 @@ const MyBooks = () => {
                   <span className="flex items-center gap-1">
                     <Download className="h-3 w-3" />
                     {ebook.downloads}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="flex items-center gap-1 text-xs">
+                    {ebook.is_public ? (
+                      <>
+                        <Globe className="h-3 w-3 text-green-600" />
+                        <span className="text-green-600">Público</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-3 w-3 text-orange-600" />
+                        <span className="text-orange-600">Privado</span>
+                      </>
+                    )}
                   </span>
                 </div>
               </Card>
@@ -330,6 +375,23 @@ const MyBooks = () => {
                   <Download className="h-4 w-4" />
                   {selectedEbook?.downloads}
                 </p>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-medium">Visibilidade</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedEbook?.is_public 
+                      ? "Livro visível para todos no Discover" 
+                      : "Livro visível apenas para você"}
+                  </p>
+                </div>
+                <Switch
+                  checked={selectedEbook?.is_public || false}
+                  onCheckedChange={() => selectedEbook && handleTogglePublic(selectedEbook.id, selectedEbook.is_public)}
+                />
               </div>
             </div>
           </div>
