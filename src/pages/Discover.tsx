@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, User } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
 import BottomNav from "@/components/BottomNav";
 import { BookCard } from "@/components/BookCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Genre {
   id: string;
@@ -41,11 +44,22 @@ interface Ebook {
   created_at?: string;
 }
 
+interface Profile {
+  id: string;
+  full_name?: string;
+  username?: string;
+  avatar_url?: string;
+  bio?: string;
+}
+
 const Discover = () => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [genres, setGenres] = useState<Genre[]>([]);
   const [books, setBooks] = useState<Ebook[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Ebook[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +67,7 @@ const Discover = () => {
   const [filterPrice, setFilterPrice] = useState("all");
   const [filterRating, setFilterRating] = useState("all");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"books" | "profiles">("books");
 
   useEffect(() => {
     fetchGenres();
@@ -62,12 +77,14 @@ const Discover = () => {
   useEffect(() => {
     if (currentUserId !== null) {
       fetchBooks();
+      fetchProfiles();
     }
   }, [currentUserId]);
 
   useEffect(() => {
     applyFilters();
-  }, [books, selectedGenre, searchQuery, sortBy, filterPrice, filterRating]);
+    applyProfileFilters();
+  }, [books, profiles, selectedGenre, searchQuery, sortBy, filterPrice, filterRating]);
 
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -91,6 +108,32 @@ const Discover = () => {
       setBooks(data);
     }
     setLoading(false);
+  };
+
+  const fetchProfiles = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url, bio")
+      .neq("id", currentUserId)
+      .order("full_name");
+
+    if (data) {
+      setProfiles(data);
+    }
+  };
+
+  const applyProfileFilters = () => {
+    let filtered = [...profiles];
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (profile) =>
+          profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          profile.username?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredProfiles(filtered);
   };
 
   const applyFilters = () => {
@@ -178,7 +221,7 @@ const Discover = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Pesquisar livros ou autores..."
+              placeholder={activeTab === "books" ? "Pesquisar livros ou autores..." : "Pesquisar usuários..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -188,9 +231,17 @@ const Discover = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 pb-24">
-        {/* Genre Filter */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Explorar por Género</h2>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "books" | "profiles")} className="mb-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="books" className="text-lg">Livros</TabsTrigger>
+            <TabsTrigger value="profiles" className="text-lg">Perfis</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="books" className="mt-6">
+            {/* Genre Filter */}
+            <div className="mb-8">
+              <h2 className="text-xl font-bold mb-4">Explorar por Género</h2>
           <div className="flex flex-wrap gap-2">
             <Badge
               variant={selectedGenre === "all" ? "default" : "outline"}
@@ -209,11 +260,11 @@ const Discover = () => {
                 {genre.name}
               </Badge>
             ))}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Filters and Sort */}
-        <div className="mb-6 space-y-4">
+            {/* Filters and Sort */}
+            <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-4">
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[180px]">
@@ -273,50 +324,108 @@ const Discover = () => {
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">{filteredBooks.length}</span>
-            <span>{filteredBooks.length === 1 ? "livro encontrado" : "livros encontrados"}</span>
-          </div>
-        </div>
-
-        {/* Books Grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-[3/4] w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+                <span>{filteredBooks.length === 1 ? "livro encontrado" : "livros encontrados"}</span>
               </div>
-            ))}
-          </div>
-        ) : filteredBooks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[40vh]">
-            <Search className="h-16 w-16 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-bold mb-2">Nenhum livro encontrado</h2>
-            <p className="text-muted-foreground text-center">
-              Tente ajustar os filtros ou pesquisa
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                id={book.id}
-                title={book.title}
-                author={book.author || "Autor Desconhecido"}
-                coverImage={book.cover_image}
-                description={book.description}
-                genre={book.genre}
-                price={book.price}
-                downloads={book.downloads}
-                pages={book.pages}
-                formats={book.formats}
-                publishedAt={book.published_at}
-                rating={book.rating}
-              />
-            ))}
-          </div>
-        )}
+            </div>
+
+            {/* Books Grid */}
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-[3/4] w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredBooks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[40vh]">
+                <Search className="h-16 w-16 text-muted-foreground mb-4" />
+                <h2 className="text-xl font-bold mb-2">Nenhum livro encontrado</h2>
+                <p className="text-muted-foreground text-center">
+                  Tente ajustar os filtros ou pesquisa
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {filteredBooks.map((book) => (
+                  <BookCard
+                    key={book.id}
+                    id={book.id}
+                    title={book.title}
+                    author={book.author || "Autor Desconhecido"}
+                    coverImage={book.cover_image}
+                    description={book.description}
+                    genre={book.genre}
+                    price={book.price}
+                    downloads={book.downloads}
+                    pages={book.pages}
+                    formats={book.formats}
+                    publishedAt={book.published_at}
+                    rating={book.rating}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="profiles" className="mt-6">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-medium">{filteredProfiles.length}</span>
+                <span>{filteredProfiles.length === 1 ? "perfil encontrado" : "perfis encontrados"}</span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-5 w-1/3" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredProfiles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[40vh]">
+                <User className="h-16 w-16 text-muted-foreground mb-4" />
+                <h2 className="text-xl font-bold mb-2">Nenhum perfil encontrado</h2>
+                <p className="text-muted-foreground text-center">
+                  Tente ajustar a pesquisa
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {filteredProfiles.map((profile) => (
+                  <div
+                    key={profile.id}
+                    onClick={() => navigate(`/account/${profile.id}`)}
+                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                  >
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={profile.avatar_url} alt={profile.full_name || profile.username} />
+                      <AvatarFallback>
+                        {(profile.full_name || profile.username || "U").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">
+                        {profile.full_name || profile.username || "Usuário"}
+                      </h3>
+                      {profile.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       <BottomNav />
