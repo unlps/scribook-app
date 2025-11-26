@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 interface Genre {
   id: string;
@@ -231,17 +231,9 @@ const Discover = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 pb-24">
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "books" | "profiles")} className="mb-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="books" className="text-lg">Livros</TabsTrigger>
-            <TabsTrigger value="profiles" className="text-lg">Perfis</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="books" className="mt-6">
-            {/* Genre Filter */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4">Explorar por Género</h2>
+        {/* Genre Filter */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Explorar por Género</h2>
           <div className="flex flex-wrap gap-2">
             <Badge
               variant={selectedGenre === "all" ? "default" : "outline"}
@@ -260,11 +252,11 @@ const Discover = () => {
                 {genre.name}
               </Badge>
             ))}
-              </div>
-            </div>
+          </div>
+        </div>
 
-            {/* Filters and Sort */}
-            <div className="mb-6 space-y-4">
+        {/* Filters and Sort */}
+        <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-4">
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[180px]">
@@ -321,14 +313,48 @@ const Discover = () => {
               </Button>
             )}
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-medium">{filteredBooks.length}</span>
-                <span>{filteredBooks.length === 1 ? "livro encontrado" : "livros encontrados"}</span>
-              </div>
+        {/* Tabs with underline style */}
+        <div className="mb-8">
+          <div className="flex gap-8 border-b">
+            <button
+              onClick={() => setActiveTab("books")}
+              className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
+                activeTab === "books"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Livros
+              {activeTab === "books" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("profiles")}
+              className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
+                activeTab === "profiles"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Perfis
+              {activeTab === "profiles" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Books Content */}
+        {activeTab === "books" && (
+          <>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+              <span className="font-medium">{filteredBooks.length}</span>
+              <span>{filteredBooks.length === 1 ? "livro encontrado" : "livros encontrados"}</span>
             </div>
 
-            {/* Books Grid */}
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {[...Array(10)].map((_, i) => (
@@ -368,9 +394,12 @@ const Discover = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
+          </>
+        )}
 
-          <TabsContent value="profiles" className="mt-6">
+        {/* Profiles Content */}
+        {activeTab === "profiles" && (
+          <>
             <div className="mb-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="font-medium">{filteredProfiles.length}</span>
@@ -424,8 +453,8 @@ const Discover = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </>
+        )}
       </main>
 
       <BottomNav />
