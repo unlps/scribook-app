@@ -1,61 +1,134 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { 
-  CreditCard, 
-  User, 
   Settings, 
-  Shield, 
-  Languages, 
-  Moon, 
-  HelpCircle, 
-  Info, 
   LogOut,
-  ChevronRight,
   Edit2,
-  BookOpen
+  BookOpen,
+  Users,
+  UserPlus,
+  UserMinus,
+  Heart,
+  ExternalLink
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
-import kutaraMabukuIcon from "@/assets/scribook-icon.jpg";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
+import { EditProfileDialog } from "@/components/EditProfileDialog";
+import { BookCard } from "@/components/BookCard";
 
 interface Profile {
+  id: string;
   full_name: string;
   email: string;
+  username?: string;
+  bio?: string;
   avatar_url?: string;
+  social_link?: string;
+}
+
+interface Stats {
+  booksCreated: number;
+  followers: number;
+  following: number;
+  booksRead: number;
 }
 
 const Account = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const { theme, setTheme } = useTheme();
+  const [stats, setStats] = useState<Stats>({ booksCreated: 0, followers: 0, following: 0, booksRead: 0 });
+  const [publicBooks, setPublicBooks] = useState<any[]>([]);
+  const [privateBooks, setPrivateBooks] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userId } = useParams<{ userId?: string }>();
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    fetchData();
+  }, [userId]);
 
-  const fetchProfile = async () => {
+  const fetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
     }
 
-    const { data } = await supabase
+    setCurrentUserId(session.user.id);
+    const profileId = userId || session.user.id;
+    const isOwnProfile = profileId === session.user.id;
+
+    // Fetch profile
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", profileId)
       .single();
 
-    if (data) {
-      setProfile(data);
+    if (profileData) {
+      setProfile(profileData);
+    }
+
+    // Fetch stats
+    const [booksData, followersData, followingData, purchasesData] = await Promise.all([
+      supabase.from("ebooks").select("id", { count: "exact" }).eq("user_id", profileId),
+      supabase.from("user_follows").select("id", { count: "exact" }).eq("following_id", profileId),
+      supabase.from("user_follows").select("id", { count: "exact" }).eq("follower_id", profileId),
+      supabase.from("purchases").select("id", { count: "exact" }).eq("user_id", profileId),
+    ]);
+
+    setStats({
+      booksCreated: booksData.count || 0,
+      followers: followersData.count || 0,
+      following: followingData.count || 0,
+      booksRead: purchasesData.count || 0,
+    });
+
+    // Fetch books
+    const { data: books } = await supabase
+      .from("ebooks")
+      .select("*")
+      .eq("user_id", profileId);
+
+    if (books) {
+      setPublicBooks(books.filter(b => b.is_public));
+      setPrivateBooks(books.filter(b => !b.is_public));
+    }
+
+    // Fetch wishlist (only for own profile)
+    if (isOwnProfile) {
+      const { data: wishlistData } = await supabase
+        .from("wishlist")
+        .select("*, ebooks(*)")
+        .eq("user_id", session.user.id);
+
+      if (wishlistData) {
+        setWishlist(wishlistData.map(w => w.ebooks));
+      }
+    }
+
+    // Check if following (only for other profiles)
+    if (!isOwnProfile) {
+      const { data: followData } = await supabase
+        .from("user_follows")
+        .select("id")
+        .eq("follower_id", session.user.id)
+        .eq("following_id", profileId)
+        .single();
+
+      setIsFollowing(!!followData);
     }
   };
 
@@ -64,54 +137,35 @@ const Account = () => {
     navigate("/auth");
   };
 
-  const menuItems = [
-    { 
-      icon: CreditCard, 
-      label: "Métodos de Pagamento", 
-      bgColor: "bg-green-100 dark:bg-green-900/30", 
-      iconColor: "text-green-600 dark:text-green-400" 
-    },
-    { 
-      icon: User, 
-      label: "Informações Pessoais", 
-      bgColor: "bg-blue-100 dark:bg-blue-900/30", 
-      iconColor: "text-blue-600 dark:text-blue-400" 
-    },
-    { 
-      icon: Settings, 
-      label: "Preferências", 
-      bgColor: "bg-purple-100 dark:bg-purple-900/30", 
-      iconColor: "text-purple-600 dark:text-purple-400" 
-    },
-    { 
-      icon: Shield, 
-      label: "Segurança", 
-      bgColor: "bg-green-100 dark:bg-green-900/30", 
-      iconColor: "text-green-600 dark:text-green-400" 
-    },
-    { 
-      icon: Languages, 
-      label: "Idioma", 
-      bgColor: "bg-orange-100 dark:bg-orange-900/30", 
-      iconColor: "text-primary",
-      value: "Português (BR)" 
-    },
-  ];
+  const handleFollow = async () => {
+    if (!currentUserId || !profile) return;
 
-  const additionalItems = [
-    { 
-      icon: HelpCircle, 
-      label: "Central de Ajuda", 
-      bgColor: "bg-green-100 dark:bg-green-900/30", 
-      iconColor: "text-green-600 dark:text-green-400" 
-    },
-    { 
-      icon: Info, 
-      label: "Sobre Kutara Mabuku", 
-      bgColor: "bg-orange-100 dark:bg-orange-900/30", 
-      iconColor: "text-primary"
-    },
-  ];
+    try {
+      if (isFollowing) {
+        await supabase
+          .from("user_follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", profile.id);
+        
+        setIsFollowing(false);
+        setStats(prev => ({ ...prev, followers: prev.followers - 1 }));
+        toast({ title: "Deixou de seguir" });
+      } else {
+        await supabase
+          .from("user_follows")
+          .insert({ follower_id: currentUserId, following_id: profile.id });
+        
+        setIsFollowing(true);
+        setStats(prev => ({ ...prev, followers: prev.followers + 1 }));
+        toast({ title: "Seguindo" });
+      }
+    } catch (error) {
+      toast({ title: "Erro ao seguir/deixar de seguir", variant: "destructive" });
+    }
+  };
+
+  const isOwnProfile = !userId || userId === currentUserId;
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,101 +174,218 @@ const Account = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={theme === "dark" ? logoDark : logo} alt="Kutara Mabuku" className="w-10 h-10 rounded-lg" />
-            <h1 className="text-2xl font-bold">Conta</h1>
+            <h1 className="text-2xl font-bold">Perfil</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            {isOwnProfile && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/settings")}
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 pb-24 space-y-6">
-        {/* Profile Section */}
+        {/* Profile Header */}
         <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback className="bg-gradient-primary text-white text-xl">
-                  {profile?.full_name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="text-xl font-bold">{profile?.full_name || "Usuário"}</h2>
-                <p className="text-sm text-muted-foreground">{profile?.email || ""}</p>
+          <div className="flex items-center gap-6">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile?.avatar_url} />
+              <AvatarFallback className="bg-gradient-primary text-white text-3xl">
+                {profile?.full_name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold">{profile?.full_name || "Usuário"}</h2>
+              {profile?.username && (
+                <p className="text-muted-foreground">@{profile.username}</p>
+              )}
+              
+              {/* Stats */}
+              <div className="flex gap-6 mt-4">
+                <div className="text-center">
+                  <div className="text-xl font-bold">{stats.booksCreated}</div>
+                  <div className="text-xs text-muted-foreground">Trabalhos</div>
+                </div>
+                <div className="text-center cursor-pointer hover:opacity-80">
+                  <div className="text-xl font-bold">{stats.followers}</div>
+                  <div className="text-xs text-muted-foreground">Seguidores</div>
+                </div>
+                <div className="text-center cursor-pointer hover:opacity-80">
+                  <div className="text-xl font-bold">{stats.following}</div>
+                  <div className="text-xs text-muted-foreground">Seguindo</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold">{stats.booksRead}</div>
+                  <div className="text-xs text-muted-foreground">Lidos</div>
+                </div>
               </div>
             </div>
-            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-              <Edit2 className="h-5 w-5 text-muted-foreground" />
-            </button>
+          </div>
+
+          {/* Action Button */}
+          <div className="mt-4">
+            {isOwnProfile ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsEditDialogOpen(true)}
+              >
+                <Edit2 className="h-4 w-4 mr-2" />
+                Editar Perfil
+              </Button>
+            ) : (
+              <Button
+                variant={isFollowing ? "outline" : "default"}
+                className="w-full"
+                onClick={handleFollow}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserMinus className="h-4 w-4 mr-2" />
+                    Deixar de Seguir
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Seguir
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </Card>
 
-        {/* Menu Items */}
-        <div className="space-y-2">
-          {menuItems.map((item, index) => (
-            <Card key={index} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full ${item.bgColor} flex items-center justify-center`}>
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
-                  </div>
-                  <span className="font-medium">{item.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {item.value && <span className="text-sm text-muted-foreground">{item.value}</span>}
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </div>
-            </Card>
-          ))}
-
-          {/* Dark Mode Toggle */}
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Moon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="font-medium">Modo Escuro</span>
-              </div>
-              <Switch 
-                checked={theme === "dark"} 
-                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} 
-              />
-            </div>
+        {/* About Section */}
+        {profile?.bio && (
+          <Card className="p-6">
+            <h3 className="font-bold mb-2">Sobre</h3>
+            <p className="text-muted-foreground">{profile.bio}</p>
+            {profile.social_link && (
+              <a
+                href={profile.social_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-3 text-primary hover:underline"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Link de Rede Social
+              </a>
+            )}
           </Card>
-        </div>
+        )}
 
-        {/* Additional Items */}
-        <div className="space-y-2">
-          {additionalItems.map((item, index) => (
-            <Card key={index} className="p-4 hover:shadow-card transition-shadow cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full ${item.bgColor} flex items-center justify-center`}>
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
-                  </div>
-                  <span className="font-medium">{item.label}</span>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Logout Button */}
-        <Card 
-          className="p-4 hover:shadow-card transition-shadow cursor-pointer border-destructive/20"
-          onClick={handleLogout}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                <LogOut className="h-6 w-6 text-destructive" />
-              </div>
-              <span className="font-medium text-destructive">Sair</span>
+        {/* Public Books */}
+        {publicBooks.length > 0 && (
+          <div>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Livros Públicos ({publicBooks.length})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {publicBooks.map((book) => (
+                <BookCard 
+                  key={book.id}
+                  id={book.id}
+                  title={book.title}
+                  author={book.author || "Autor Desconhecido"}
+                  coverImage={book.cover_image}
+                  description={book.description}
+                  genre={book.genre}
+                  price={book.price}
+                  downloads={book.downloads}
+                  pages={book.pages}
+                  formats={book.formats}
+                  publishedAt={book.published_at}
+                  rating={book.rating}
+                />
+              ))}
             </div>
           </div>
-        </Card>
+        )}
+
+        {/* Private Books (only for own profile) */}
+        {isOwnProfile && privateBooks.length > 0 && (
+          <div>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Livros Privados ({privateBooks.length})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {privateBooks.map((book) => (
+                <BookCard 
+                  key={book.id}
+                  id={book.id}
+                  title={book.title}
+                  author={book.author || "Autor Desconhecido"}
+                  coverImage={book.cover_image}
+                  description={book.description}
+                  genre={book.genre}
+                  price={book.price}
+                  downloads={book.downloads}
+                  pages={book.pages}
+                  formats={book.formats}
+                  publishedAt={book.published_at}
+                  rating={book.rating}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Wishlist (only for own profile) */}
+        {isOwnProfile && wishlist.length > 0 && (
+          <div>
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Heart className="h-5 w-5" />
+              Lista de Desejos ({wishlist.length})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {wishlist.map((book) => (
+                <BookCard 
+                  key={book.id}
+                  id={book.id}
+                  title={book.title}
+                  author={book.author || "Autor Desconhecido"}
+                  coverImage={book.cover_image}
+                  description={book.description}
+                  genre={book.genre}
+                  price={book.price}
+                  downloads={book.downloads}
+                  pages={book.pages}
+                  formats={book.formats}
+                  publishedAt={book.published_at}
+                  rating={book.rating}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Edit Profile Dialog */}
+      {profile && (
+        <EditProfileDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          profile={profile}
+          onProfileUpdated={fetchData}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <BottomNav />
