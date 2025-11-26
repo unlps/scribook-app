@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { 
   Settings, 
   LogOut,
@@ -14,14 +16,19 @@ import {
   UserPlus,
   UserMinus,
   Heart,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  Download,
+  Edit,
+  Trash2,
+  Star
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
-import { BookCard } from "@/components/BookCard";
+import { stripHtml } from "@/lib/utils";
 
 interface Profile {
   id: string;
@@ -49,6 +56,8 @@ const Account = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [showBookDialog, setShowBookDialog] = useState(false);
   
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -296,23 +305,38 @@ const Account = () => {
               <BookOpen className="h-5 w-5" />
               Livros Públicos ({publicBooks.length})
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-4">
               {publicBooks.map((book) => (
-                <BookCard 
+                <div
                   key={book.id}
-                  id={book.id}
-                  title={book.title}
-                  author={book.author || "Autor Desconhecido"}
-                  coverImage={book.cover_image}
-                  description={book.description}
-                  genre={book.genre}
-                  price={book.price}
-                  downloads={book.downloads}
-                  pages={book.pages}
-                  formats={book.formats}
-                  publishedAt={book.published_at}
-                  rating={book.rating}
-                />
+                  onClick={() => {
+                    setSelectedBook(book);
+                    setShowBookDialog(true);
+                  }}
+                  className="flex-shrink-0 w-40 cursor-pointer group"
+                >
+                  <div className="aspect-[2/3] bg-muted rounded-lg mb-2 overflow-hidden border-2 border-border group-hover:border-primary transition-colors">
+                    {book.cover_image ? (
+                      <img src={book.cover_image} alt={book.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-primary">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate">{stripHtml(book.title)}</p>
+                  <p className="text-xs text-muted-foreground truncate">{book.author || "Autor Desconhecido"}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {book.views || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="h-3 w-3" />
+                      {book.downloads || 0}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -325,23 +349,38 @@ const Account = () => {
               <BookOpen className="h-5 w-5" />
               Livros Privados ({privateBooks.length})
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-4">
               {privateBooks.map((book) => (
-                <BookCard 
+                <div
                   key={book.id}
-                  id={book.id}
-                  title={book.title}
-                  author={book.author || "Autor Desconhecido"}
-                  coverImage={book.cover_image}
-                  description={book.description}
-                  genre={book.genre}
-                  price={book.price}
-                  downloads={book.downloads}
-                  pages={book.pages}
-                  formats={book.formats}
-                  publishedAt={book.published_at}
-                  rating={book.rating}
-                />
+                  onClick={() => {
+                    setSelectedBook(book);
+                    setShowBookDialog(true);
+                  }}
+                  className="flex-shrink-0 w-40 cursor-pointer group"
+                >
+                  <div className="aspect-[2/3] bg-muted rounded-lg mb-2 overflow-hidden border-2 border-border group-hover:border-primary transition-colors">
+                    {book.cover_image ? (
+                      <img src={book.cover_image} alt={book.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-primary">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate">{stripHtml(book.title)}</p>
+                  <p className="text-xs text-muted-foreground truncate">{book.author || "Autor Desconhecido"}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {book.views || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="h-3 w-3" />
+                      {book.downloads || 0}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -354,28 +393,150 @@ const Account = () => {
               <Heart className="h-5 w-5" />
               Lista de Desejos ({wishlist.length})
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-4">
               {wishlist.map((book) => (
-                <BookCard 
+                <div
                   key={book.id}
-                  id={book.id}
-                  title={book.title}
-                  author={book.author || "Autor Desconhecido"}
-                  coverImage={book.cover_image}
-                  description={book.description}
-                  genre={book.genre}
-                  price={book.price}
-                  downloads={book.downloads}
-                  pages={book.pages}
-                  formats={book.formats}
-                  publishedAt={book.published_at}
-                  rating={book.rating}
-                />
+                  onClick={() => {
+                    setSelectedBook(book);
+                    setShowBookDialog(true);
+                  }}
+                  className="flex-shrink-0 w-40 cursor-pointer group"
+                >
+                  <div className="aspect-[2/3] bg-muted rounded-lg mb-2 overflow-hidden border-2 border-border group-hover:border-primary transition-colors">
+                    {book.cover_image ? (
+                      <img src={book.cover_image} alt={book.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-primary">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium truncate">{stripHtml(book.title)}</p>
+                  <p className="text-xs text-muted-foreground truncate">{book.author || "Autor Desconhecido"}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {book.views || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="h-3 w-3" />
+                      {book.downloads || 0}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
       </main>
+
+      {/* Book Details Dialog */}
+      <Dialog open={showBookDialog} onOpenChange={setShowBookDialog}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            {selectedBook?.cover_image && (
+              <div className="aspect-[2/3] w-full max-w-xs mx-auto rounded-lg overflow-hidden">
+                <img src={selectedBook.cover_image} alt={selectedBook.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">{stripHtml(selectedBook?.title || "")}</h2>
+              
+              {selectedBook?.author && (
+                <p className="text-sm text-muted-foreground">
+                  Por {selectedBook.author}
+                </p>
+              )}
+              
+              {selectedBook?.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {stripHtml(selectedBook.description)}
+                </p>
+              )}
+
+              <div className="flex items-center gap-4 text-sm">
+                {selectedBook?.genre && (
+                  <Badge variant="secondary">{selectedBook.genre}</Badge>
+                )}
+                {selectedBook?.rating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span>{selectedBook.rating}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Visualizações</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    {selectedBook?.views || 0}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Downloads</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Download className="h-4 w-4" />
+                    {selectedBook?.downloads || 0}
+                  </p>
+                </div>
+              </div>
+
+              {selectedBook?.price !== undefined && (
+                <div className="pt-2 border-t">
+                  <p className="text-sm text-muted-foreground">Preço</p>
+                  <p className="text-lg font-bold">
+                    {selectedBook.price > 0 ? `${selectedBook.price} MZN` : "Grátis"}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {isOwnProfile && (
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowBookDialog(false);
+                  navigate(`/book/${selectedBook?.id}`);
+                }}
+                className="w-full sm:w-auto"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Ver Detalhes
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowBookDialog(false);
+                  navigate(`/editor?id=${selectedBook?.id}`);
+                }}
+                className="w-full sm:w-auto"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+            </DialogFooter>
+          )}
+          
+          {!isOwnProfile && (
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  setShowBookDialog(false);
+                  navigate(`/book/${selectedBook?.id}`);
+                }}
+                className="w-full"
+              >
+                Ver Detalhes
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Profile Dialog */}
       {profile && (
