@@ -60,6 +60,7 @@ export default function BookDetails() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [sortBy, setSortBy] = useState<"recent" | "oldest" | "highest">("recent");
+  const [authorProfile, setAuthorProfile] = useState<{ full_name?: string; avatar_url?: string; bio?: string } | null>(null);
   useEffect(() => {
     fetchBookDetails();
     checkWishlistStatus();
@@ -116,10 +117,22 @@ export default function BookDetails() {
 
       // Fetch author's other books
       if (bookData.user_id) {
-        const {
-          data: authorData
-        } = await supabase.from("ebooks").select("*").eq("user_id", bookData.user_id).eq("is_public", true).neq("id", id).limit(4);
+        const { data: authorData } = await supabase
+          .from("ebooks")
+          .select("*")
+          .eq("user_id", bookData.user_id)
+          .eq("is_public", true)
+          .neq("id", id)
+          .limit(4);
         setAuthorBooks(authorData || []);
+
+        // Fetch author profile
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url, bio")
+          .eq("id", bookData.user_id)
+          .single();
+        setAuthorProfile(profileData);
       }
     } catch (error) {
       console.error("Error fetching book:", error);
@@ -344,11 +357,24 @@ export default function BookDetails() {
           {/* About Author */}
           <div>
             <Separator className="my-6" />
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <User className="h-6 w-6" />
-              Sobre o Autor
-            </h2>
-            <p className="text-muted-foreground">{book.author}</p>
+            <h2 className="text-2xl font-bold mb-4">Sobre o Autor</h2>
+            <div className="flex items-start gap-4">
+              {authorProfile?.avatar_url ? (
+                <img 
+                  src={authorProfile.avatar_url} 
+                  alt={authorProfile?.full_name || book.author || "Autor"}
+                  className="h-16 w-16 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0 text-xl">
+                  <User className="h-8 w-8" />
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2">{authorProfile?.full_name || book.author}</h3>
+                {authorProfile?.bio && <p className="text-muted-foreground">{authorProfile.bio}</p>}
+              </div>
+            </div>
           </div>
 
           {/* More from Author */}
@@ -410,9 +436,17 @@ export default function BookDetails() {
             <div className="space-y-6">
               {reviews.length === 0 ? <p className="text-muted-foreground">Ainda não há avaliações</p> : <>
                   {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map(review => <div key={review.id} className="flex gap-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
-                        {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
-                      </div>
+                      {review.profiles?.avatar_url ? (
+                        <img 
+                          src={review.profiles.avatar_url} 
+                          alt={review.profiles?.full_name || "Avatar"}
+                          className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
+                          {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                      )}
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>

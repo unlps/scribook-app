@@ -64,15 +64,26 @@ export const EditProfileDialog = ({
       // Upload avatar if changed
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+        const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
+        
+        // Delete old avatar if exists
+        if (profile.avatar_url) {
+          const oldPath = profile.avatar_url.split('/').pop();
+          if (oldPath) {
+            await supabase.storage
+              .from('avatars')
+              .remove([`${session.user.id}/${oldPath}`]);
+          }
+        }
+
         const { error: uploadError } = await supabase.storage
-          .from('ebook-covers')
+          .from('avatars')
           .upload(fileName, avatarFile, { upsert: true });
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('ebook-covers')
+          .from('avatars')
           .getPublicUrl(fileName);
 
         avatarUrl = publicUrl;
