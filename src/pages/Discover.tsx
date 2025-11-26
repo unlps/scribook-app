@@ -315,40 +315,42 @@ const Discover = () => {
           </div>
         </div>
 
-        {/* Tabs with underline style */}
-        <div className="mb-8">
-          <div className="flex gap-8 border-b">
-            <button
-              onClick={() => setActiveTab("books")}
-              className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
-                activeTab === "books"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Livros
-              {activeTab === "books" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("profiles")}
-              className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
-                activeTab === "profiles"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Perfis
-              {activeTab === "profiles" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
+        {/* Tabs with underline style - only show when searching */}
+        {searchQuery && (
+          <div className="mb-8">
+            <div className="flex gap-8 border-b">
+              <button
+                onClick={() => setActiveTab("books")}
+                className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
+                  activeTab === "books"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Livros
+                {activeTab === "books" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("profiles")}
+                className={`pb-3 px-2 text-lg font-medium transition-colors relative ${
+                  activeTab === "profiles"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Perfis
+                {activeTab === "profiles" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Books Content */}
-        {activeTab === "books" && (
+        {(activeTab === "books" || !searchQuery) && (
           <>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
               <span className="font-medium">{filteredBooks.length}</span>
@@ -398,7 +400,7 @@ const Discover = () => {
         )}
 
         {/* Profiles Content */}
-        {activeTab === "profiles" && (
+        {searchQuery && activeTab === "profiles" && (
           <>
             <div className="mb-6">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
