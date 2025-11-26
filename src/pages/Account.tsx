@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { 
   Settings, 
   LogOut,
@@ -21,7 +22,9 @@ import {
   Download,
   Edit,
   Trash2,
-  Star
+  Star,
+  Globe,
+  Lock
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import logoDark from "@/assets/logo-dark.png";
@@ -171,6 +174,179 @@ const Account = () => {
       }
     } catch (error) {
       toast({ title: "Erro ao seguir/deixar de seguir", variant: "destructive" });
+    }
+  };
+
+  const handleTogglePublic = async (bookId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from("ebooks")
+      .update({ is_public: !currentStatus })
+      .eq("id", bookId);
+    
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível alterar a visibilidade",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: currentStatus ? "Livro privado" : "Livro público",
+      description: currentStatus 
+        ? "Agora apenas você pode ver este livro" 
+        : "Agora todos podem ver este livro no Discover"
+    });
+    
+    fetchData();
+    if (selectedBook && selectedBook.id === bookId) {
+      setSelectedBook({ ...selectedBook, is_public: !currentStatus });
+    }
+  };
+
+  const handleDeleteEbook = async () => {
+    if (!selectedBook) return;
+
+    const { error } = await supabase.from("ebooks").delete().eq("id", selectedBook.id);
+    
+    if (error) {
+      toast({
+        title: "Erro ao apagar",
+        description: "Não foi possível apagar o ebook",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Ebook apagado",
+      description: "O ebook foi apagado com sucesso"
+    });
+    
+    setSelectedBook(null);
+    setShowBookDialog(false);
+    fetchData();
+  };
+
+  const handleDownloadEbook = async () => {
+    if (!selectedBook) return;
+
+    try {
+      const htmlToText = (html: string) => {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || '';
+      };
+
+      const { data: chapters } = await supabase
+        .from("chapters")
+        .select("*")
+        .eq("ebook_id", selectedBook.id)
+        .order("chapter_order", { ascending: true });
+
+      const { jsPDF } = await import('jspdf');
+      const pdf = new jsPDF();
+      let yPosition = 20;
+
+      if (selectedBook.cover_image) {
+        try {
+          const img = new Image();
+          img.src = selectedBook.cover_image;
+          await new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+          });
+          
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const imgRatio = img.width / img.height;
+          const pageRatio = pageWidth / pageHeight;
+          
+          let finalWidth, finalHeight, xOffset, yOffset;
+          
+          if (imgRatio > pageRatio) {
+            finalHeight = pageHeight;
+            finalWidth = finalHeight * imgRatio;
+            xOffset = (pageWidth - finalWidth) / 2;
+            yOffset = 0;
+          } else {
+            finalWidth = pageWidth;
+            finalHeight = finalWidth / imgRatio;
+            xOffset = 0;
+            yOffset = (pageHeight - finalHeight) / 2;
+          }
+          
+          pdf.addImage(img, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+        } catch (error) {
+          console.error('Erro ao adicionar capa ao PDF:', error);
+        }
+      }
+
+      pdf.addPage();
+      yPosition = 20;
+
+      pdf.setFontSize(24);
+      const titleText = htmlToText(selectedBook.title);
+      const titleLines = pdf.splitTextToSize(titleText, 170);
+      pdf.text(titleLines, 20, yPosition);
+      yPosition += titleLines.length * 12 + 20;
+
+      if (selectedBook.author) {
+        pdf.setFontSize(14);
+        pdf.text(`Escrito por ${selectedBook.author}`, 20, yPosition);
+      }
+
+      if (selectedBook.description) {
+        pdf.addPage();
+        yPosition = 20;
+        pdf.setFontSize(12);
+        const descText = htmlToText(selectedBook.description);
+        const descLines = pdf.splitTextToSize(descText, 170);
+        pdf.text(descLines, 20, yPosition);
+      }
+
+      chapters?.forEach((chapter) => {
+        pdf.addPage();
+        yPosition = 20;
+
+        pdf.setFontSize(18);
+        const chapterTitle = htmlToText(chapter.title);
+        pdf.text(chapterTitle, 20, yPosition);
+        yPosition += 15;
+
+        pdf.setFontSize(12);
+        const plainText = htmlToText(chapter.content);
+        const contentLines = pdf.splitTextToSize(plainText, 170);
+        
+        contentLines.forEach((line: string) => {
+          if (yPosition > 280) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, 20, yPosition);
+          yPosition += 7;
+        });
+      });
+
+      pdf.save(`${htmlToText(selectedBook.title)}.pdf`);
+      
+      await supabase
+        .from("ebooks")
+        .update({ downloads: selectedBook.downloads + 1 })
+        .eq("id", selectedBook.id);
+
+      toast({
+        title: "Download concluído",
+        description: "O ebook foi baixado com sucesso"
+      });
+      
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Erro no download",
+        description: "Não foi possível fazer o download",
+        variant: "destructive"
+      });
     }
   };
 
@@ -433,96 +609,116 @@ const Account = () => {
 
       {/* Book Details Dialog */}
       <Dialog open={showBookDialog} onOpenChange={setShowBookDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[500px]">
           <div className="space-y-4">
             {selectedBook?.cover_image && (
-              <div className="aspect-[2/3] w-full max-w-xs mx-auto rounded-lg overflow-hidden">
-                <img src={selectedBook.cover_image} alt={selectedBook.title} className="w-full h-full object-cover" />
+              <div className="flex justify-center">
+                <img 
+                  src={selectedBook.cover_image} 
+                  alt={selectedBook.title}
+                  className="w-48 h-auto rounded-lg border shadow-sm"
+                />
               </div>
             )}
             
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold">{stripHtml(selectedBook?.title || "")}</h2>
-              
-              {selectedBook?.author && (
-                <p className="text-sm text-muted-foreground">
-                  Por {selectedBook.author}
-                </p>
-              )}
-              
-              {selectedBook?.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {stripHtml(selectedBook.description)}
-                </p>
-              )}
-
-              <div className="flex items-center gap-4 text-sm">
-                {selectedBook?.genre && (
-                  <Badge variant="secondary">{selectedBook.genre}</Badge>
-                )}
-                {selectedBook?.rating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>{selectedBook.rating}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Visualizações</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    {selectedBook?.views || 0}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Downloads</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <Download className="h-4 w-4" />
-                    {selectedBook?.downloads || 0}
-                  </p>
-                </div>
-              </div>
-
-              {selectedBook?.price !== undefined && (
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-muted-foreground">Preço</p>
-                  <p className="text-lg font-bold">
-                    {selectedBook.price > 0 ? `${selectedBook.price} MZN` : "Grátis"}
-                  </p>
-                </div>
-              )}
+              <h2 className="text-lg font-semibold leading-none tracking-tight">
+                {stripHtml(selectedBook?.title || "")}
+              </h2>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {stripHtml(selectedBook?.description || "Sem descrição")}
+              </p>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Criado em</p>
+                <p className="font-medium">
+                  {selectedBook?.created_at 
+                    ? new Date(selectedBook.created_at).toLocaleDateString('pt-PT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                    : '-'
+                  }
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Páginas</p>
+                <p className="font-medium">{selectedBook?.pages || 0}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Visualizações</p>
+                <p className="font-medium flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {selectedBook?.views || 0}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Downloads</p>
+                <p className="font-medium flex items-center gap-1">
+                  <Download className="h-4 w-4" />
+                  {selectedBook?.downloads || 0}
+                </p>
+              </div>
+            </div>
+
+            {isOwnProfile && (
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">Visibilidade</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedBook?.is_public 
+                        ? "Livro visível para todos no Discover" 
+                        : "Livro visível apenas para você"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={selectedBook?.is_public || false}
+                    onCheckedChange={() => selectedBook && handleTogglePublic(selectedBook.id, selectedBook.is_public)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
-                variant="outline"
-                onClick={() => {
-                  setShowBookDialog(false);
-                  navigate(`/book/${selectedBook?.id}`);
-                }}
+                variant="destructive"
+                onClick={handleDeleteEbook}
                 className="w-full sm:w-auto"
               >
-                <Eye className="mr-2 h-4 w-4" />
-                Ver Detalhes
+                <Trash2 className="mr-2 h-4 w-4" />
+                Apagar
               </Button>
-              <Button
-                onClick={() => {
-                  setShowBookDialog(false);
-                  navigate(`/editor?id=${selectedBook?.id}`);
-                }}
-                className="w-full sm:w-auto"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Editar
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={handleDownloadEbook}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+                <Button
+                  onClick={() => {
+                    navigate(`/editor?id=${selectedBook?.id}`);
+                    setShowBookDialog(false);
+                  }}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+              </div>
             </DialogFooter>
-          )}
-          
-          {!isOwnProfile && (
+          ) : (
             <DialogFooter>
               <Button
                 onClick={() => {
