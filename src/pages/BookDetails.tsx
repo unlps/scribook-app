@@ -371,7 +371,12 @@ export default function BookDetails() {
                 </div>
               )}
               <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-2">{authorProfile?.full_name || book.author}</h3>
+                <h3 
+                  className="font-semibold text-lg mb-2 hover:text-primary cursor-pointer transition-colors"
+                  onClick={() => navigate(`/account/${book.user_id}`)}
+                >
+                  {authorProfile?.full_name || book.author}
+                </h3>
                 {authorProfile?.bio && <p className="text-muted-foreground">{authorProfile.bio}</p>}
               </div>
             </div>
@@ -436,20 +441,30 @@ export default function BookDetails() {
             <div className="space-y-6">
               {reviews.length === 0 ? <p className="text-muted-foreground">Ainda não há avaliações</p> : <>
                   {(showAllReviews ? getSortedReviews() : getSortedReviews().slice(0, 5)).map(review => <div key={review.id} className="flex gap-4">
-                      {review.profiles?.avatar_url ? (
-                        <img 
-                          src={review.profiles.avatar_url} 
-                          alt={review.profiles?.full_name || "Avatar"}
-                          className="h-10 w-10 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
-                          {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                      )}
+                      <div 
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate(`/account/${(review as any).user_id}`)}
+                      >
+                        {review.profiles?.avatar_url ? (
+                          <img 
+                            src={review.profiles.avatar_url} 
+                            alt={review.profiles?.full_name || "Avatar"}
+                            className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
+                            {review.profiles?.full_name?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{review.profiles?.full_name || "Anônimo"}</span>
+                          <span 
+                            className="font-semibold hover:text-primary cursor-pointer transition-colors"
+                            onClick={() => navigate(`/account/${(review as any).user_id}`)}
+                          >
+                            {review.profiles?.full_name || "Anônimo"}
+                          </span>
                           <span className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(review.created_at), {
                         addSuffix: true,
