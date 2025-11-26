@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BookOpen, Star } from "lucide-react";
 import { stripHtml } from "@/lib/utils";
-
 const Index = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -18,19 +17,18 @@ const Index = () => {
   const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [showBookDialog, setShowBookDialog] = useState(false);
-  
   const heroImages = [library1, library2];
-
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
+      const {
+        error
+      } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
+          redirectTo: `${window.location.origin}/dashboard`
+        }
       });
-
       if (error) throw error;
     } catch (error) {
       console.error('Erro no login com Google:', error);
@@ -38,65 +36,40 @@ const Index = () => {
       setIsLoading(false);
     }
   };
-  
-  const messages = [
-    "Crie ebooks padrão, interativos e profissionais incríveis com facilidade",
-    "Projete layouts bonitos com nosso editor intuitivo",
-    "Adicione elementos interativos para envolver seus leitores",
-    "Exporte em múltiplos formatos para qualquer dispositivo",
-    "Colabore com sua equipe em tempo real"
-  ];
-
+  const messages = ["Crie ebooks padrão, interativos e profissionais incríveis com facilidade", "Projete layouts bonitos com nosso editor intuitivo", "Adicione elementos interativos para envolver seus leitores", "Exporte em múltiplos formatos para qualquer dispositivo", "Colabore com sua equipe em tempo real"];
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % messages.length);
+      setCurrentSlide(prev => (prev + 1) % messages.length);
     }, 3000);
     return () => clearInterval(timer);
   }, [messages.length]);
-
   useEffect(() => {
     const imageTimer = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % heroImages.length);
+      setCurrentImage(prev => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(imageTimer);
   }, [heroImages.length]);
-
   useEffect(() => {
     fetchFeaturedBooks();
   }, []);
-
   const fetchFeaturedBooks = async () => {
-    const { data } = await supabase
-      .from("ebooks")
-      .select("*")
-      .eq("is_public", true)
-      .order("rating", { ascending: false })
-      .limit(5);
-    
+    const {
+      data
+    } = await supabase.from("ebooks").select("*").eq("is_public", true).order("rating", {
+      ascending: false
+    }).limit(5);
     if (data) {
       setFeaturedBooks(data);
     }
   };
-
   const handleBookClick = (book: any) => {
     setSelectedBook(book);
     setShowBookDialog(true);
   };
-  
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
+  return <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Image Slider */}
       <div className="relative w-full h-[45vh] overflow-hidden">
-        {heroImages.map((image, index) => (
-          <img 
-            key={index}
-            src={image} 
-            alt={`Library scene ${index + 1}`} 
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-              index === currentImage ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
-        ))}
+        {heroImages.map((image, index) => <img key={index} src={image} alt={`Library scene ${index + 1}`} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${index === currentImage ? 'opacity-100' : 'opacity-0'}`} />)}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
       </div>
 
@@ -114,76 +87,29 @@ const Index = () => {
 
         {/* Message Slider Dots */}
         <div className="flex gap-2 mb-12">
-          {messages.map((_, index) => (
-            <div
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                index === currentSlide 
-                  ? "w-8 bg-[#fc5934]" 
-                  : "w-2 bg-muted hover:bg-muted-foreground/50"
-              }`}
-            />
-          ))}
+          {messages.map((_, index) => <div key={index} onClick={() => setCurrentSlide(index)} className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentSlide ? "w-8 bg-[#fc5934]" : "w-2 bg-muted hover:bg-muted-foreground/50"}`} />)}
         </div>
 
         {/* Featured Books */}
-        {featuredBooks.length > 0 && (
-          <div className="w-full max-w-md mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-center">Livros em Destaque</h2>
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {featuredBooks.map((book) => (
-                <div
-                  key={book.id}
-                  onClick={() => handleBookClick(book)}
-                  className="flex-shrink-0 w-32 cursor-pointer group"
-                >
-                  <div className="aspect-[2/3] bg-muted rounded-lg mb-2 overflow-hidden border-2 border-border group-hover:border-primary transition-colors">
-                    {book.cover_image ? (
-                      <img src={book.cover_image} alt={book.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm font-medium truncate">{stripHtml(book.title)}</p>
-                  <p className="text-xs text-muted-foreground truncate">{book.author}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {featuredBooks.length > 0}
 
         {/* Action Buttons */}
         <div className="w-full max-w-md space-y-4">
-          <Button 
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            variant="outline"
-            className="w-full h-14 text-base bg-background border-border hover:bg-accent"
-          >
+          <Button onClick={handleGoogleLogin} disabled={isLoading} variant="outline" className="w-full h-14 text-base bg-background border-border hover:bg-accent">
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Continuar com Google
           </Button>
 
-          <Button 
-            onClick={() => navigate("/auth")}
-            className="w-full h-14 text-base bg-[#fc5934] hover:bg-[#ff8568] text-white"
-          >
+          <Button onClick={() => navigate("/auth")} className="w-full h-14 text-base bg-[#fc5934] hover:bg-[#ff8568] text-white">
             Começar
           </Button>
 
-          <Button 
-            onClick={() => navigate("/auth")}
-            variant="ghost"
-            className="w-full h-14 text-base text-[#fc5934] hover:text-[#ff8568] hover:bg-accent"
-          >
+          <Button onClick={() => navigate("/auth")} variant="ghost" className="w-full h-14 text-base text-[#fc5934] hover:text-[#ff8568] hover:bg-accent">
             Já Tenho uma Conta
           </Button>
         </div>
@@ -196,65 +122,48 @@ const Index = () => {
             <DialogTitle>{stripHtml(selectedBook?.title || "")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedBook?.cover_image && (
-              <div className="aspect-[2/3] w-full max-w-xs mx-auto rounded-lg overflow-hidden">
+            {selectedBook?.cover_image && <div className="aspect-[2/3] w-full max-w-xs mx-auto rounded-lg overflow-hidden">
                 <img src={selectedBook.cover_image} alt={selectedBook.title} className="w-full h-full object-cover" />
-              </div>
-            )}
+              </div>}
             
             <div className="space-y-2">
-              {selectedBook?.author && (
-                <p className="text-sm">
+              {selectedBook?.author && <p className="text-sm">
                   <span className="font-semibold">Autor:</span> {selectedBook.author}
-                </p>
-              )}
+                </p>}
               
-              {selectedBook?.genre && (
-                <div className="flex items-center gap-2">
+              {selectedBook?.genre && <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">Gênero:</span>
                   <Badge variant="secondary">{selectedBook.genre}</Badge>
-                </div>
-              )}
+                </div>}
               
-              {selectedBook?.price !== undefined && (
-                <p className="text-sm">
+              {selectedBook?.price !== undefined && <p className="text-sm">
                   <span className="font-semibold">Preço:</span>{" "}
                   {selectedBook.price > 0 ? `${selectedBook.price} MZN` : "Grátis"}
-                </p>
-              )}
+                </p>}
               
-              {selectedBook?.rating > 0 && (
-                <div className="flex items-center gap-2">
+              {selectedBook?.rating > 0 && <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">Avaliação:</span>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm">{selectedBook.rating}</span>
                   </div>
-                </div>
-              )}
+                </div>}
               
-              {selectedBook?.description && (
-                <div>
+              {selectedBook?.description && <div>
                   <p className="text-sm font-semibold mb-1">Descrição:</p>
                   <p className="text-sm text-muted-foreground">{selectedBook.description}</p>
-                </div>
-              )}
+                </div>}
             </div>
 
-            <Button 
-              onClick={() => {
-                setShowBookDialog(false);
-                navigate("/auth");
-              }}
-              className="w-full bg-[#fc5934] hover:bg-[#ff8568]"
-            >
+            <Button onClick={() => {
+            setShowBookDialog(false);
+            navigate("/auth");
+          }} className="w-full bg-[#fc5934] hover:bg-[#ff8568]">
               Começar a Ler
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
